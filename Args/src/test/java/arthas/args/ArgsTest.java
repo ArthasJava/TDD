@@ -10,5 +10,11 @@ public class ArgsTest {
         Assertions.assertTrue(option.logging());
     }
 
+    @Test
+    void should_set_boolean_option_to_false_when_flag_not_present() {
+        BooleanOption option = Args.parse(BooleanOption.class);
+        Assertions.assertFalse(option.logging);
+    }
+
     static record BooleanOption(@Option("l") boolean logging) {}
 }
