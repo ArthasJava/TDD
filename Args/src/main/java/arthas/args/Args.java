@@ -18,19 +18,47 @@ public class Args {
     }
 
     private static Object parseOption(List<String> arguments, Parameter parameter) {
-        Object value = null;
         Option option = parameter.getAnnotation(Option.class);
+        OptionParser parser = null;
         if (parameter.getType() == boolean.class) {
-            value = arguments.contains("-" + option.value());
+            parser = new BooleanParser();
         }
         if (parameter.getType() == int.class) {
-            int index = arguments.indexOf("-" + option.value());
-            value = Integer.parseInt(arguments.get(index + 1));
+            parser = new IntOptionParse();
         }
         if (parameter.getType() == String.class) {
-            int index = arguments.indexOf("-" + option.value());
-            value = arguments.get(index + 1);
+            parser = new StringOptionParse();
         }
-        return value;
+        return parser.parse(arguments, option);
+    }
+
+    interface OptionParser {
+        Object parse(List<String> arguments, Option option);
+    }
+
+    static class StringOptionParse implements OptionParser {
+
+        @Override
+        public Object parse(List<String> arguments, Option option) {
+            int index = arguments.indexOf("-" + option.value());
+            return arguments.get(index + 1);
+        }
+    }
+
+    static class IntOptionParse implements OptionParser {
+
+        @Override
+        public Object parse(List<String> arguments, Option option) {
+            int index = arguments.indexOf("-" + option.value());
+            return Integer.parseInt(arguments.get(index + 1));
+        }
+    }
+
+    static class BooleanParser implements OptionParser {
+
+        @Override
+        public Object parse(List<String> arguments, Option option) {
+            return arguments.contains("-" + option.value());
+        }
     }
 }
