@@ -16,5 +16,13 @@ public class ArgsTest {
         Assertions.assertFalse(option.logging);
     }
 
-    static record BooleanOption(@Option("l") boolean logging) {}
+    static record BooleanOption(@Option("l") boolean logging) { }
+
+    @Test
+    void should_parse_int_as_option_value() {
+        IntOption option = Args.parse(IntOption.class, "-p", "8080");
+        Assertions.assertEquals(8080, option.port);
+    }
+
+    static record IntOption(@Option("p") int port) { }
 }
