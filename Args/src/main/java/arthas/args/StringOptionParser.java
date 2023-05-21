@@ -1,7 +1,11 @@
 package arthas.args;
 
 class StringOptionParser extends IntOptionParser {
-    public StringOptionParser() {
+    private StringOptionParser() {
         super(String::valueOf);
+    }
+
+    public static OptionParser createStringOptionParser() {
+        return new StringOptionParser();
     }
 }
