@@ -3,10 +3,10 @@ package arthas.args;
 import java.util.List;
 import java.util.function.Function;
 
-class IntOptionParser implements OptionParser {
+class SingleValuedOptionParser implements OptionParser {
     Function<String, Object> valueParser;
 
-    public IntOptionParser(Function<String, Object> valueParser) {
+    public SingleValuedOptionParser(Function<String, Object> valueParser) {
         this.valueParser = valueParser;
     }
 
