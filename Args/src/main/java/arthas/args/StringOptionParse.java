@@ -1,11 +1,10 @@
 package arthas.args;
 
 import java.util.List;
+import java.util.function.Function;
 
 class StringOptionParse extends IntOptionParse {
-    
-    @Override
-    protected Object parseValue(String value) {
-        return String.valueOf(value);
+    public StringOptionParse() {
+        super(String::valueOf);
     }
 }

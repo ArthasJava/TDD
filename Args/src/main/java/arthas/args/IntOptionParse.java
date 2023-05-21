@@ -1,8 +1,17 @@
 package arthas.args;
 
 import java.util.List;
+import java.util.function.Function;
 
 class IntOptionParse implements OptionParser {
+    Function<String, Object> valueParser = Integer::parseInt;
+
+    public IntOptionParse() {
+    }
+
+    public IntOptionParse(Function<String, Object> valueParser) {
+        this.valueParser = valueParser;
+    }
 
     @Override
     public Object parse(List<String> arguments, Option option) {
@@ -12,6 +21,6 @@ class IntOptionParse implements OptionParser {
     }
 
     protected Object parseValue(String value) {
-        return Integer.parseInt(value);
+        return valueParser.apply(value);
     }
 }
