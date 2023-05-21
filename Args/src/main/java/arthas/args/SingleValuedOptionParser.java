@@ -3,15 +3,15 @@ package arthas.args;
 import java.util.List;
 import java.util.function.Function;
 
-class SingleValuedOptionParser implements OptionParser {
-    Function<String, Object> valueParser;
+class SingleValuedOptionParser<T> implements OptionParser {
+    Function<String, T> valueParser;
 
-    public SingleValuedOptionParser(Function<String, Object> valueParser) {
+    public SingleValuedOptionParser(Function<String, T> valueParser) {
         this.valueParser = valueParser;
     }
 
     @Override
-    public Object parse(List<String> arguments, Option option) {
+    public T parse(List<String> arguments, Option option) {
         int index = arguments.indexOf("-" + option.value());
         String value = arguments.get(index + 1);
         return valueParser.apply(value);
