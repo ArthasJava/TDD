@@ -35,4 +35,13 @@ class SingleValuedOptionParserTest {
         Assertions.assertEquals(0,
                 new SingleValuedOptionParser<Integer>(0, Integer::parseInt).parse(Arrays.asList(), option("p")));
     }
+
+    @Test
+    void should_not_accept_extra_argument_for_string_single_valued_option() {
+        TooManyArgumentException exp = assertThrows(TooManyArgumentException.class,
+                () -> new SingleValuedOptionParser<>("", String::valueOf)
+                        .parse(Arrays.asList("-d", "/usr/logs", "/usr/vars"),
+                                option("d")));
+        assertEquals("d", exp.getOption());
+    }
 }

@@ -19,10 +19,10 @@ class SingleValuedOptionParser<T> implements OptionParser<T> {
             return defaultValue;
         }
         if (index + 1 == arguments.size() || arguments.get(index + 1).startsWith("-")) {
-            throw new InsufficientArgumentException("p");
+            throw new InsufficientArgumentException(option.value());
         }
         if (index + 2 < arguments.size() && !arguments.get(index + 2).startsWith("-")) {
-            throw new TooManyArgumentException("p");
+            throw new TooManyArgumentException(option.value());
         }
         return valueParser.apply(arguments.get(index + 1));
     }
