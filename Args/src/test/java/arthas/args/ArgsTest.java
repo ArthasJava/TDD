@@ -6,19 +6,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ArgsTest {
-    @Test
-    void should_set_boolean_option_to_true_when_flag_present() {
-        BooleanOption option = Args.parse(BooleanOption.class, "-l");
-        assertTrue(option.logging());
-    }
-
-    @Test
-    void should_set_boolean_option_to_false_when_flag_not_present() {
-        BooleanOption option = Args.parse(BooleanOption.class);
-        assertFalse(option.logging);
-    }
-
-    record BooleanOption(@Option("l") boolean logging) { }
 
     @Test
     void should_parse_int_as_option_value() {

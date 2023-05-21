@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class BooleanParserTest {
     @Test
@@ -22,6 +22,11 @@ class BooleanParserTest {
     @Test
     void should_set_default_value_to_false_when_option_not_present() {
         assertFalse(new BooleanParser().parse(Collections.EMPTY_LIST, option("l")));
+    }
+
+    @Test
+    void should_set_value_to_true_when_option_present() {
+        assertTrue(new BooleanParser().parse(List.of("-l"), option("l")));
     }
 
     static Option option(String value) {
