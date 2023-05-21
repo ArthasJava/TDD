@@ -24,7 +24,7 @@ class BooleanParserTest {
         assertFalse(new BooleanParser().parse(Collections.EMPTY_LIST, option("l")));
     }
 
-    Option option(String value) {
+    static Option option(String value) {
         return new Option() {
 
             @Override
