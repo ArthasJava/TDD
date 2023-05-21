@@ -25,34 +25,4 @@ public class Args {
 
     private static final Map<Class<?>, OptionParser> PARSERS = Map.of(boolean.class, new BooleanParser(), int.class,
             new IntOptionParse(), String.class, new StringOptionParse());
-
-    interface OptionParser {
-        Object parse(List<String> arguments, Option option);
-    }
-
-    static class StringOptionParse implements OptionParser {
-
-        @Override
-        public Object parse(List<String> arguments, Option option) {
-            int index = arguments.indexOf("-" + option.value());
-            return arguments.get(index + 1);
-        }
-    }
-
-    static class IntOptionParse implements OptionParser {
-
-        @Override
-        public Object parse(List<String> arguments, Option option) {
-            int index = arguments.indexOf("-" + option.value());
-            return Integer.parseInt(arguments.get(index + 1));
-        }
-    }
-
-    static class BooleanParser implements OptionParser {
-
-        @Override
-        public Object parse(List<String> arguments, Option option) {
-            return arguments.contains("-" + option.value());
-        }
-    }
 }
