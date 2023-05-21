@@ -25,4 +25,12 @@ public class ArgsTest {
     }
 
     static record IntOption(@Option("p") int port) { }
+
+    @Test
+    void should_get_string_as_option_value() {
+        StringOption option = Args.parse(StringOption.class, "-d", "/usr/logs");
+        Assertions.assertEquals("/usr/logs", option.directory);
+    }
+    
+    static record StringOption(@Option("d") String directory) { }
 }
