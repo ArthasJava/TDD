@@ -1,5 +1,7 @@
 package arthas.args;
 
+import arthas.args.exception.TooManyArgumentException;
+
 import java.util.List;
 
 class BooleanParser implements OptionParser<Boolean> {

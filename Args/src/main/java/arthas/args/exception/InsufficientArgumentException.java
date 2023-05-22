@@ -1,4 +1,4 @@
-package arthas.args;
+package arthas.args.exception;
 
 public class InsufficientArgumentException extends RuntimeException {
     private final String option;

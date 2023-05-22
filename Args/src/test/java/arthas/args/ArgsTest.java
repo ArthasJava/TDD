@@ -1,5 +1,6 @@
 package arthas.args;
 
+import arthas.args.exception.IllegalOptionException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

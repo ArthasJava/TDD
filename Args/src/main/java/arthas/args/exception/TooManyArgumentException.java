@@ -1,4 +1,4 @@
-package arthas.args;
+package arthas.args.exception;
 
 public class TooManyArgumentException extends RuntimeException {
     private final String option;

@@ -1,6 +1,7 @@
 package arthas.args;
 
-import org.junit.jupiter.api.Assertions;
+import arthas.args.exception.InsufficientArgumentException;
+import arthas.args.exception.TooManyArgumentException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
