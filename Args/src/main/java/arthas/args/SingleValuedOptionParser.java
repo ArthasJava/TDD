@@ -32,11 +32,10 @@ class SingleValuedOptionParser<T> implements OptionParser<T> {
         return valueParser.apply(arguments.get(index + 1));
     }
 
-    private static List<String> values(List<String> arguments, int index) {
-        int followingFlag = IntStream.range(index + 1, arguments.size())
+    static List<String> values(List<String> arguments, int index) {
+        return arguments.subList(index + 1, IntStream.range(index + 1, arguments.size())
                 .filter(it -> arguments.get(it).startsWith("-"))
                 .findFirst()
-                .orElse(arguments.size());
-        return arguments.subList(index + 1, followingFlag);
+                .orElse(arguments.size()));
     }
 }
