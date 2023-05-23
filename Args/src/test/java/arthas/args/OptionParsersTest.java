@@ -12,11 +12,11 @@ import java.util.function.Function;
 import static arthas.args.BooleanParserTest.option;
 import static org.junit.jupiter.api.Assertions.*;
 
-class SingleValuedOptionParserTest {
+class OptionParsersTest {
     @Test
     void should_not_accept_extra_argument_for_single_valued_option() {
         TooManyArgumentException exp = assertThrows(TooManyArgumentException.class,
-                () -> SingleValuedOptionParser.unary(0, Integer::parseInt)
+                () -> OptionParsers.unary(0, Integer::parseInt)
                         .parse(Arrays.asList("-p", "8080", "8081"),
                         option("p")));
         assertEquals("p", exp.getOption());
@@ -26,7 +26,7 @@ class SingleValuedOptionParserTest {
     @ValueSource(strings = {"-p -l", "-p"})
     void should_not_accept_insufficient_argument_for_singe_valued_option(String arguments) {
         InsufficientArgumentException exp = assertThrows(InsufficientArgumentException.class,
-                () -> SingleValuedOptionParser.unary(0, Integer::parseInt).parse(Arrays.asList(arguments.split(" ")),
+                () -> OptionParsers.unary(0, Integer::parseInt).parse(Arrays.asList(arguments.split(" ")),
                         option("p")));
         assertEquals("p", exp.getOption());
     }
@@ -35,7 +35,7 @@ class SingleValuedOptionParserTest {
     void should_set_default_value_to_0_for_int_option() {
         Function<String, Object> whatever = (it) -> null;
         Object defaultValue = new Object();
-        assertSame(defaultValue, SingleValuedOptionParser.unary(defaultValue, whatever).parse(Arrays.asList(),
+        assertSame(defaultValue, OptionParsers.unary(defaultValue, whatever).parse(Arrays.asList(),
                 option("p")));
     }
 
@@ -45,7 +45,7 @@ class SingleValuedOptionParserTest {
         Function<String, Object> parse = (it) -> parsed;
         Object whatever = new Object();
         assertSame(parsed,
-                SingleValuedOptionParser.unary(whatever, parse)
+                OptionParsers.unary(whatever, parse)
                         .parse(Arrays.asList("-p", "8080"), option("p")));
     }
 }
