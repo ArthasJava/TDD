@@ -6,6 +6,7 @@ import arthas.args.exception.TooManyArgumentException;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 class OptionParsers {
@@ -20,6 +21,16 @@ class OptionParsers {
                 defaultValue));
     }
 
+    public static <T> OptionParser<T[]> list(IntFunction<T[]> generator, Function<String, T> valueParser) {
+        return (arguments, option) -> values(arguments, option).map(
+                        it -> it.stream().map(value -> parseValue(value, valueParser)).toArray(generator))
+                .orElse(generator.apply(0));
+    }
+
+    static Optional<List<String>> values(List<String> arguments, Option option) {
+        int index = arguments.indexOf("-" + option.value());
+        return Optional.ofNullable(index == -1 ? null : values(arguments, index));
+    }
     static Optional<List<String>> values(List<String> arguments, Option option, int expectedSize) {
         int index = arguments.indexOf("-" + option.value());
         if (index == -1) {

@@ -73,6 +73,17 @@ class OptionParsersTest {
             assertTrue(OptionParsers.bool().parse(List.of("-l"), option("l")));
         }
     }
+
+    @Nested
+    class ListOptionParser {
+        @Test
+        void should_parse_list_value() {
+            String[] value = OptionParsers.list(String[]::new, String::valueOf)
+                    .parse(Arrays.asList("-g", "this", "is", "a", "list"), option("g"));
+            assertArrayEquals(new String[]{"this", "is", "a", "list"}, value);
+        }
+    }
+
     static Option option(String value) {
         return new Option() {
 
