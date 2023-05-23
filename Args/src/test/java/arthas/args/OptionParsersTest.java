@@ -82,6 +82,13 @@ class OptionParsersTest {
                     .parse(Arrays.asList("-g", "this", "is", "a", "list"), option("g"));
             assertArrayEquals(new String[]{"this", "is", "a", "list"}, value);
         }
+
+        @Test
+        void should_use_empty_array_as_default_value() {
+            String[] value = OptionParsers.list(String[]::new, String::valueOf)
+                    .parse(Arrays.asList(), option("g"));
+            assertEquals(0, value.length);
+        }
     }
 
     static Option option(String value) {
