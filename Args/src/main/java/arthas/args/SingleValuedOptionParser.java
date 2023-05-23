@@ -8,19 +8,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-class SingleValuedOptionParser<T> implements OptionParser<T> {
-    Function<String, T> valueParser;
-    T defaultValue;
-
-    private SingleValuedOptionParser(T defaultValue, Function<String, T> valueParser) {
-        this.valueParser = valueParser;
-        this.defaultValue = defaultValue;
-    }
-
-    @Override
-    public T parse(List<String> arguments, Option option) {
-        return values(arguments, option, 1).map(it -> parseValue(it.get(0), valueParser)).orElse(defaultValue);
-    }
+class SingleValuedOptionParser {
 
     public static OptionParser<Boolean> bool() {
         return ((arguments, option) -> values(arguments, option, 0).isPresent());
