@@ -22,7 +22,7 @@ class SingleValuedOptionParser<T> implements OptionParser<T> {
         return values(arguments, option, 1).map(it -> parseValue(it.get(0))).orElse(defaultValue);
     }
 
-    private static Optional<List<String>> values(List<String> arguments, Option option, int expectedSize) {
+    static Optional<List<String>> values(List<String> arguments, Option option, int expectedSize) {
         int index = arguments.indexOf("-" + option.value());
         if (index == -1) {
             return Optional.empty();
