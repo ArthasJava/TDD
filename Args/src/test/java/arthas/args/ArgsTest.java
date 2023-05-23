@@ -36,4 +36,13 @@ public class ArgsTest {
     }
 
     record OptionWithUnsupportType(@Option("l") Object logging) { };
+
+    @Test
+    void name() {
+        ListOptions options = Args.parse(ListOptions.class, "-g", "this", "is", "a", "list", "-d", "1", "2", "-3", "5");
+        assertArrayEquals(new String[]{"this", "is", "a", "list"}, options.group);
+        assertArrayEquals(new Integer[]{1, 2, -3, 5}, options.decimals);
+    }
+
+    record ListOptions(@Option("g") String[] group, @Option("d") Integer[] decimals) { }
 }
