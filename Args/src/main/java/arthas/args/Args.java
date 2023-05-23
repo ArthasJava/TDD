@@ -32,7 +32,7 @@ public class Args {
     }
 
     private static final Map<Class<?>, OptionParser> PARSERS = Map.of(boolean.class,
-            BooleanParser.createBooleanParser(), int.class,
+            SingleValuedOptionParser.bool(), int.class,
             new SingleValuedOptionParser<>(0, Integer::parseInt), String.class,
             new SingleValuedOptionParser<>("", String::valueOf));
 }

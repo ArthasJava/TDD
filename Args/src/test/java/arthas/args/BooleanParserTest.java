@@ -15,19 +15,19 @@ class BooleanParserTest {
     @Test
     void should_not_accept_extra_argument_for_boolean_option() {
         TooManyArgumentException exp = assertThrows(TooManyArgumentException.class, () -> {
-            BooleanParser.createBooleanParser().parse(Arrays.asList("-l", "t"), option("l"));
+            SingleValuedOptionParser.bool().parse(Arrays.asList("-l", "t"), option("l"));
         });
         Assertions.assertEquals("l", exp.getOption());
     }
 
     @Test
     void should_set_default_value_to_false_when_option_not_present() {
-        assertFalse(BooleanParser.createBooleanParser().parse(Collections.EMPTY_LIST, option("l")));
+        assertFalse(SingleValuedOptionParser.bool().parse(Collections.EMPTY_LIST, option("l")));
     }
 
     @Test
     void should_set_value_to_true_when_option_present() {
-        assertTrue(BooleanParser.createBooleanParser().parse(List.of("-l"), option("l")));
+        assertTrue(SingleValuedOptionParser.bool().parse(List.of("-l"), option("l")));
     }
 
     static Option option(String value) {
