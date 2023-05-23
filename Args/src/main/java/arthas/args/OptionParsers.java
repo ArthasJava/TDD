@@ -1,5 +1,6 @@
 package arthas.args;
 
+import arthas.args.exception.IllegalValueException;
 import arthas.args.exception.InsufficientArgumentException;
 import arthas.args.exception.TooManyArgumentException;
 
@@ -17,13 +18,14 @@ class OptionParsers {
 
     public static <T> OptionParser<T> unary(T defaultValue,
             Function<String, T> valueParser) {
-        return ((arguments, option) -> values(arguments, option, 1).map(it -> parseValue(it.get(0), valueParser)).orElse(
+        return ((arguments, option) -> values(arguments, option, 1).map(it -> parseValue(option, it.get(0),
+                valueParser)).orElse(
                 defaultValue));
     }
 
     public static <T> OptionParser<T[]> list(IntFunction<T[]> generator, Function<String, T> valueParser) {
         return (arguments, option) -> values(arguments, option).map(
-                        it -> it.stream().map(value -> parseValue(value, valueParser)).toArray(generator))
+                        it -> it.stream().map(value -> parseValue(option, value, valueParser)).toArray(generator))
                 .orElse(generator.apply(0));
     }
 
@@ -46,8 +48,12 @@ class OptionParsers {
         return Optional.of(values);
     }
 
-    private static <T> T parseValue(String value, Function<String, T> valueParser) {
-        return valueParser.apply(value);
+    private static <T> T parseValue(Option option, String value, Function<String, T> valueParser) {
+        try {
+            return valueParser.apply(value);
+        } catch (Exception e) {
+            throw new IllegalValueException(option.value(), value);
+        }
     }
 
     static List<String> values(List<String> arguments, int index) {

@@ -1,5 +1,6 @@
 package arthas.args;
 
+import arthas.args.exception.IllegalValueException;
 import arthas.args.exception.InsufficientArgumentException;
 import arthas.args.exception.TooManyArgumentException;
 import org.junit.jupiter.api.Assertions;
@@ -88,6 +89,16 @@ class OptionParsersTest {
             String[] value = OptionParsers.list(String[]::new, String::valueOf)
                     .parse(Arrays.asList(), option("g"));
             assertEquals(0, value.length);
+        }
+
+        @Test
+        void should_throw_exp_if_value_parser_cant_parse_value() {
+            Function<String, String> parser = (it) -> { throw new RuntimeException(); };
+            IllegalValueException exp = assertThrows(IllegalValueException.class,
+                    () -> OptionParsers.list(String[]::new, parser)
+                            .parse(Arrays.asList("-g", "this", "is"), option("g")));
+            assertEquals("g", exp.getOption());
+            assertEquals("this", exp.getValue());
         }
     }
 
