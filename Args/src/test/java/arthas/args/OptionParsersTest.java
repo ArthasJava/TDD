@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InOrder;
+import org.mockito.Mockito;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -82,9 +84,15 @@ class OptionParsersTest {
     class ListOptionParser {
         @Test
         void should_parse_list_value() {
-            String[] value = OptionParsers.list(String[]::new, String::valueOf)
+            // setup
+            Function parser = mock(Function.class);
+            // exercise
+            OptionParsers.list(Object[]::new, parser)
                     .parse(Arrays.asList("-g", "this", "is", "a", "list"), option("g"));
-            assertArrayEquals(new String[]{"this", "is", "a", "list"}, value);
+            // verify
+            InOrder order = inOrder(parser, parser);
+            order.verify(parser).apply("this");
+            order.verify(parser).apply("is");
         }
 
         @Test
