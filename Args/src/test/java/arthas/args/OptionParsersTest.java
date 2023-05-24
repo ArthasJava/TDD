@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class OptionParsersTest {
 
@@ -47,10 +48,12 @@ class OptionParsersTest {
 
         @Test
         void should_parse_value_if_flag_present() {
-            Object parsed = new Object();
-            Function<String, Object> parse = (it) -> parsed;
-            Object whatever = new Object();
-            assertSame(parsed, OptionParsers.unary(whatever, parse).parse(Arrays.asList("-p", "8080"), option("p")));
+            // setup
+            Function parser = mock(Function.class);
+            // exercise
+            OptionParsers.unary(any(), parser).parse(Arrays.asList("-p", "8080"), option("p"));
+            // verify
+            verify(parser).apply("8080");
         }
     }
 
@@ -94,8 +97,7 @@ class OptionParsersTest {
 
         @Test
         void should_use_empty_array_as_default_value() {
-            String[] value = OptionParsers.list(String[]::new, String::valueOf)
-                    .parse(Arrays.asList(), option("g"));
+            String[] value = OptionParsers.list(String[]::new, String::valueOf).parse(Arrays.asList(), option("g"));
             assertEquals(0, value.length);
         }
 
