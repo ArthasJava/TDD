@@ -74,6 +74,12 @@ public class ContainerTest {
 
             // TODO multi inject constructors
 
+            @Test
+            void should_throw_exception_if_multi_inject_constructor_provided() {
+                assertThrows(IllegalComponentException.class,
+                        () -> context.bind(Component.class, ComponentWithMultiInjectConstructors.class));
+            }
+
             // TODO no default constructor and inject constructor
 
             // TODO dependencies not exist
@@ -120,6 +126,16 @@ class ComponentWithInjectConstructor implements Component {
 
     public Dependency getDependency() {
         return dependency;
+    }
+}
+
+class ComponentWithMultiInjectConstructors implements Component {
+    @Inject
+    public ComponentWithMultiInjectConstructors(String name) {
+    }
+
+    @Inject
+    public ComponentWithMultiInjectConstructors(String name, int age) {
     }
 }
 
