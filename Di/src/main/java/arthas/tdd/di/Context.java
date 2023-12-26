@@ -3,6 +3,7 @@ package arthas.tdd.di;
 import jakarta.inject.Inject;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class Context {
             try {
                 Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> get(p.getType())).toArray();
                 return injectConstructor.newInstance(dependencies);
-            } catch (Exception e) {
+            } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 throw new RuntimeException(e);
             }
         });
@@ -46,6 +47,9 @@ public class Context {
     }
 
     public <Type> Type get(Class<Type> type) {
+        if (!suppliers.containsKey(type)) {
+            throw new DependencyNotFoundException();
+        }
         return (Type) suppliers.get(type).get();
     }
 }
