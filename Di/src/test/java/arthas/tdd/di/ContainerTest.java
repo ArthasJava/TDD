@@ -72,6 +72,10 @@ public class ContainerTest {
 
                 assertEquals("indirect of dependency", ((DependencyWithInjectConstructor) dependency).getDependency());
             }
+
+            // TODO multi inject constructors
+
+            // no default constructor and inject constructor
         }
 
         public class FieldInjection {
