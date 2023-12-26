@@ -55,7 +55,6 @@ public class ContainerTest {
             }
 
             // TODO A --> B --> C
-
             @Test
             void should_bind_type_a_class_with_transitive_dependencies() {
                 context.bind(Component.class, ComponentWithInjectConstructor.class);
@@ -75,7 +74,9 @@ public class ContainerTest {
 
             // TODO multi inject constructors
 
-            // no default constructor and inject constructor
+            // TODO no default constructor and inject constructor
+
+            // TODO dependencies not exist
         }
 
         public class FieldInjection {
