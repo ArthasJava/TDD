@@ -1,29 +1,47 @@
 package arthas.tdd.di;
 
+import jakarta.inject.Inject;
+
+import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+import static java.util.Arrays.stream;
 
 public class Context {
     private final Map<Class<?>, Supplier<?>> suppliers = new HashMap<>();
 
-
-    public <ComponentType> void bind(Class<ComponentType> type, ComponentType instance) {
-        suppliers.put(type, (Supplier<ComponentType>) () -> instance);
+    public <Type> void bind(Class<Type> type, Type instance) {
+        suppliers.put(type, (Supplier<Type>) () -> instance);
     }
 
-    public <ComponentType> ComponentType get(Class<ComponentType> type) {
-        return (ComponentType) suppliers.get(type).get();
-    }
-
-    public <ComponentType, ComponentImplementation extends ComponentType> void bind(Class<ComponentType> type,
-            Class<ComponentImplementation> implementation) {
-        suppliers.put(type, (Supplier<ComponentImplementation>) () -> {
+    public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
+        suppliers.put(type, (Supplier<Implementation>) () -> {
             try {
-                return implementation.getConstructor().newInstance();
+                Constructor<Implementation> injectConstructor = getInjectConstructor(implementation);
+                Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> get(p.getType())).toArray();
+                return injectConstructor.newInstance(dependencies);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
+    }
+
+    private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
+        Stream<Constructor<?>> injectConstructors = stream(implementation.getConstructors()).filter(
+                c -> c.isAnnotationPresent(Inject.class));
+        return (Constructor<Type>) injectConstructors.findFirst().orElseGet(() -> {
+            try {
+                return implementation.getConstructor();
+            } catch (NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public <Type> Type get(Class<Type> type) {
+        return (Type) suppliers.get(type).get();
     }
 }
