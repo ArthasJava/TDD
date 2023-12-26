@@ -55,6 +55,23 @@ public class ContainerTest {
             }
 
             // TODO A --> B --> C
+
+            @Test
+            void should_bind_type_a_class_with_transitive_dependencies() {
+                context.bind(Component.class, ComponentWithInjectConstructor.class);
+                context.bind(Dependency.class, DependencyWithInjectConstructor.class);
+                context.bind(String.class, "indirect of dependency");
+
+                Component component = context.get(Component.class);
+                assertNotNull(component);
+                assertInstanceOf(ComponentWithInjectConstructor.class, component);
+
+                Dependency dependency = ((ComponentWithInjectConstructor) component).getDependency();
+                assertNotNull(dependency);
+                assertInstanceOf(DependencyWithInjectConstructor.class, dependency);
+
+                assertEquals("indirect of dependency", ((DependencyWithInjectConstructor) dependency).getDependency());
+            }
         }
 
         public class FieldInjection {
@@ -97,6 +114,19 @@ class ComponentWithInjectConstructor implements Component {
     }
 
     public Dependency getDependency() {
+        return dependency;
+    }
+}
+
+class DependencyWithInjectConstructor implements Dependency {
+    private String dependency;
+
+    @Inject
+    public DependencyWithInjectConstructor(String dependency) {
+        this.dependency = dependency;
+    }
+
+    public String getDependency() {
         return dependency;
     }
 }
