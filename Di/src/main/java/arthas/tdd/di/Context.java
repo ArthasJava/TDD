@@ -24,6 +24,10 @@ public class Context {
         if (injectConstructors.length > 1) {
             throw new IllegalComponentException();
         }
+        if (injectConstructors.length == 0 && stream(implementation.getConstructors()).noneMatch(
+                c -> c.getParameters().length == 0)) {
+            throw new IllegalComponentException();
+        }
         suppliers.put(type, (Supplier<Implementation>) () -> {
             try {
                 Constructor<Implementation> injectConstructor = getInjectConstructor(implementation);
