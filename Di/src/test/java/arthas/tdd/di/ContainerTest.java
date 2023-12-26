@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ContainerTest {
@@ -23,11 +25,20 @@ public class ContainerTest {
             Component instance = new Component() { };
             context.bind(Component.class, instance);
 
-            assertSame(instance, context.get(Component.class));
+            Optional<Component> component = context.get(Component.class);
+            assertTrue(component.isPresent());
+            assertSame(instance, component.get());
         }
 
         // TODO abstract clas
         // TODO interface
+
+        @Test
+        void should_return_empty_if_component_not_defined() {
+            Optional<Component> component = context.get(Component.class);
+            assertFalse(component.isPresent());
+        }
+
         @Nested
         public class ConstructorInjection {
             // TODO no args constructor
@@ -35,9 +46,9 @@ public class ContainerTest {
             void should_bind_type_to_a_class_with_default_constructor() {
                 context.bind(Component.class, ComponentWithDefaultConstructor.class);
 
-                Component actual = context.get(Component.class);
-                assertNotNull(actual);
-                assertInstanceOf(ComponentWithDefaultConstructor.class, actual);
+                Optional<Component> component = context.get(Component.class);
+                assertTrue(component.isPresent());
+                assertInstanceOf(ComponentWithDefaultConstructor.class, component.get());
             }
             // TODO with dependencies
 
@@ -48,8 +59,9 @@ public class ContainerTest {
                 context.bind(Component.class, ComponentWithInjectConstructor.class);
                 context.bind(Dependency.class, dependency);
 
-                Component instance = context.get(Component.class);
-                assertNotNull(instance);
+                Optional<Component> component = context.get(Component.class);
+                assertTrue(component.isPresent());
+                Component instance = component.get();
                 assertInstanceOf(ComponentWithInjectConstructor.class, instance);
                 assertSame(dependency, ((ComponentWithInjectConstructor) instance).getDependency());
             }
@@ -61,11 +73,11 @@ public class ContainerTest {
                 context.bind(Dependency.class, DependencyWithInjectConstructor.class);
                 context.bind(String.class, "indirect of dependency");
 
-                Component component = context.get(Component.class);
-                assertNotNull(component);
-                assertInstanceOf(ComponentWithInjectConstructor.class, component);
+                Optional<Component> component = context.get(Component.class);
+                assertTrue(component.isPresent());
+                assertInstanceOf(ComponentWithInjectConstructor.class, component.get());
 
-                Dependency dependency = ((ComponentWithInjectConstructor) component).getDependency();
+                Dependency dependency = ((ComponentWithInjectConstructor) component.get()).getDependency();
                 assertNotNull(dependency);
                 assertInstanceOf(DependencyWithInjectConstructor.class, dependency);
 

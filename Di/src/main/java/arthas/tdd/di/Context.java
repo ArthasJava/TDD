@@ -7,6 +7,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,7 @@ public class Context {
         Constructor<Implementation> injectConstructor = getInjectConstructor(implementation);
         suppliers.put(type, (Supplier<Implementation>) () -> {
             try {
-                Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> get(p.getType())).toArray();
+                Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> get(p.getType()).orElseThrow(DependencyNotFoundException::new)).toArray();
                 return injectConstructor.newInstance(dependencies);
             } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 throw new RuntimeException(e);
@@ -46,10 +47,7 @@ public class Context {
         });
     }
 
-    public <Type> Type get(Class<Type> type) {
-        if (!suppliers.containsKey(type)) {
-            throw new DependencyNotFoundException();
-        }
-        return (Type) suppliers.get(type).get();
+    public <Type> Optional<Type> get(Class<Type> type) {
+        return Optional.ofNullable(suppliers.get(type)).map(supplier -> (Type) supplier.get());
     }
 }
