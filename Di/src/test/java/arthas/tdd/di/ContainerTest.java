@@ -108,6 +108,14 @@ public class ContainerTest {
 
                 assertThrows(DependencyNotFoundException.class, () -> context.get(Component.class));
             }
+
+            @Test
+            void should_throw_exception_if_cyclic_dependencies_found() {
+                context.bind(Component.class, ComponentWithInjectConstructor.class);
+                context.bind(Dependency.class, DependencyDependedOnComponent.class);
+
+                assertThrows(CyclicDependenciesException.class, () -> context.get(Component.class));
+            }
         }
 
         public class FieldInjection {
@@ -179,5 +187,14 @@ class DependencyWithInjectConstructor implements Dependency {
 
     public String getDependency() {
         return dependency;
+    }
+}
+
+class DependencyDependedOnComponent implements Dependency {
+    private Component component;
+
+    @Inject
+    public DependencyDependedOnComponent(Component component) {
+        this.component = component;
     }
 }

@@ -22,14 +22,34 @@ public class Context {
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
         Constructor<Implementation> injectConstructor = getInjectConstructor(implementation);
-        suppliers.put(type, (Supplier<Implementation>) () -> {
+        suppliers.put(type, new ConstructorInjectionSupplier<Implementation>(injectConstructor));
+    }
+
+    class ConstructorInjectionSupplier<T> implements Supplier{
+        private Constructor<T> injectConstructor;
+        private boolean constructing = false;
+
+        @Inject
+        public ConstructorInjectionSupplier(Constructor<T> injectConstructor) {
+            this.injectConstructor = injectConstructor;
+        }
+
+        @Override
+        public T get() {
+            if (constructing) {
+                throw new CyclicDependenciesException();
+            }
             try {
-                Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> get(p.getType()).orElseThrow(DependencyNotFoundException::new)).toArray();
+                constructing = true;
+                Object[] dependencies = stream(injectConstructor.getParameters()).map(
+                        p -> Context.this.get(p.getType()).orElseThrow(DependencyNotFoundException::new)).toArray();
                 return injectConstructor.newInstance(dependencies);
             } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 throw new RuntimeException(e);
+            } finally {
+                constructing = false;
             }
-        });
+        }
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
