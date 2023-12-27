@@ -58,18 +58,20 @@ public class Context {
         @Override
         public T get() {
             if (constructing) {
-                throw new CyclicDependenciesException();
+                throw new CyclicDependenciesException(componentType);
             }
             try {
                 constructing = true;
                 Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> Context.this.get(p.getType())
                         .orElseThrow(() -> new DependencyNotFoundException(componentType, p.getType()))).toArray();
                 return injectConstructor.newInstance(dependencies);
-            } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            } finally {
-                constructing = false;
+            } catch (CyclicDependenciesException e) {
+                throw new CyclicDependenciesException(componentType, e);
+            } catch (InvocationTargetException | InstantiationException | IllegalAccessException e){
+                    throw new RuntimeException(e);
+                } finally{
+                    constructing = false;
+                }
             }
         }
     }
-}
