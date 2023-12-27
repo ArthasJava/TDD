@@ -25,6 +25,25 @@ public class Context {
         suppliers.put(type, new ConstructorInjectionSupplier<Implementation>(injectConstructor));
     }
 
+    private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
+        List<Constructor<?>> injectConstructors = stream(implementation.getConstructors()).filter(
+                c -> c.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        if (injectConstructors.size() > 1) {
+            throw new IllegalComponentException();
+        }
+        return (Constructor<Type>) injectConstructors.stream().findFirst().orElseGet(() -> {
+            try {
+                return implementation.getConstructor();
+            } catch (NoSuchMethodException e) {
+                throw new IllegalComponentException();
+            }
+        });
+    }
+
+    public <Type> Optional<Type> get(Class<Type> type) {
+        return Optional.ofNullable(suppliers.get(type)).map(supplier -> (Type) supplier.get());
+    }
+
     class ConstructorInjectionSupplier<T> implements Supplier{
         private Constructor<T> injectConstructor;
         private boolean constructing = false;
@@ -50,24 +69,5 @@ public class Context {
                 constructing = false;
             }
         }
-    }
-
-    private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
-        List<Constructor<?>> injectConstructors = stream(implementation.getConstructors()).filter(
-                c -> c.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
-        if (injectConstructors.size() > 1) {
-            throw new IllegalComponentException();
-        }
-        return (Constructor<Type>) injectConstructors.stream().findFirst().orElseGet(() -> {
-            try {
-                return implementation.getConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new IllegalComponentException();
-            }
-        });
-    }
-
-    public <Type> Optional<Type> get(Class<Type> type) {
-        return Optional.ofNullable(suppliers.get(type)).map(supplier -> (Type) supplier.get());
     }
 }
