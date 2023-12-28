@@ -109,7 +109,7 @@ public class ContainerTest {
                 contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
 
                 DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
-                        () -> contextConfig.getContext().get(Component.class));
+                        () -> contextConfig.getContext());
                 assertEquals(Dependency.class, exception.getDependency());
             }
 
@@ -119,7 +119,7 @@ public class ContainerTest {
                 contextConfig.bind(Dependency.class, DependencyWithInjectConstructor.class);
 
                 DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
-                        () -> contextConfig.getContext().get(Component.class));
+                        () -> contextConfig.getContext());
                 assertEquals(Dependency.class, exception.getComponent());
                 assertEquals(String.class, exception.getDependency());
             }
