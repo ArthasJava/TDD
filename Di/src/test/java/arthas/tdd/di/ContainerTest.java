@@ -130,7 +130,7 @@ public class ContainerTest {
                 contextConfig.bind(Dependency.class, DependencyDependedOnComponent.class);
 
                 CyclicDependenciesException exception = assertThrows(CyclicDependenciesException.class,
-                        () -> contextConfig.getContext().get(Component.class));
+                        () -> contextConfig.getContext());
                 Set<Class<?>> components = exception.getComponents();
 
                 assertEquals(2, components.size());
@@ -145,7 +145,7 @@ public class ContainerTest {
                 contextConfig.bind(AnotherDependency.class, AnotherDependencyDependedOnComponent.class);
 
                 CyclicDependenciesException exception = assertThrows(CyclicDependenciesException.class,
-                        () -> contextConfig.getContext().get(Component.class));
+                        () -> contextConfig.getContext());
                 Set<Class<?>> components = exception.getComponents();
 
                 assertEquals(3, components.size());

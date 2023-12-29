@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -25,7 +26,7 @@ public class ContextConfig {
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
         Constructor<Implementation> injectConstructor = getInjectConstructor(implementation);
-        providers.put(type, new ConstructorInjectionSupplier<>(type, injectConstructor));
+        providers.put(type, new ConstructorInjectionSupplier<>(injectConstructor));
         dependencies.put(type,
                 stream(injectConstructor.getParameters()).map(Parameter::getType).collect(Collectors.toList()));
     }
@@ -45,53 +46,50 @@ public class ContextConfig {
         });
     }
 
+    private void checkDependencies(Class<?> component, Stack<Class<?>> visiting) {
+        for (Class<?> dependency : dependencies.get(component)) {
+            if (visiting.contains(dependency)) {
+                throw new CyclicDependenciesException(visiting);
+            }
+            visiting.push(dependency);
+            if (!dependencies.containsKey(dependency)) {
+                throw new DependencyNotFoundException(component, dependency);
+            }
+            checkDependencies(dependency, visiting);
+            visiting.pop();
+        }
+    }
+
     public Context getContext() {
         // 后续做校验的为止
-        for (Class<?> component : dependencies.keySet()) {
-            for (Class<?> dependency : dependencies.get(component)) {
-                if (!dependencies.containsKey(dependency)) {
-                    throw new DependencyNotFoundException(component, dependency);
-                }
-            }
-        }
+        dependencies.keySet().forEach(component -> checkDependencies(component, new Stack<>()));
         return new Context() {
             @Override
             public <Type> Optional<Type> get(Class<Type> type) {
-                return Optional.ofNullable(providers.get(type)).map(componentProvider -> (Type) componentProvider.get(this));
+                return Optional.ofNullable(providers.get(type))
+                        .map(componentProvider -> (Type) componentProvider.get(this));
             }
         };
     }
 
     class ConstructorInjectionSupplier<T> implements ComponentProvider<T> {
-        private Class<?> componentType;
-        private Constructor<T> injectConstructor;
-        private boolean constructing = false;
+        private final Constructor<T> injectConstructor;
 
         @Inject
-        public ConstructorInjectionSupplier(Class<?> componentType, Constructor<T> injectConstructor) {
-            this.componentType = componentType;
+        public ConstructorInjectionSupplier(Constructor<T> injectConstructor) {
             this.injectConstructor = injectConstructor;
         }
 
         @Override
         public T get(Context context) {
-            if (constructing) {
-                throw new CyclicDependenciesException(componentType);
-            }
             try {
-                constructing = true;
                 Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> {
                     Class<?> type = p.getType();
-                    return context.get(type)
-                            .orElseThrow(() -> new DependencyNotFoundException(componentType, p.getType()));
+                    return context.get(type).get();
                 }).toArray();
                 return injectConstructor.newInstance(dependencies);
-            } catch (CyclicDependenciesException e) {
-                throw new CyclicDependenciesException(componentType, e);
             } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
                 throw new RuntimeException(e);
-            } finally {
-                constructing = false;
             }
         }
     }
