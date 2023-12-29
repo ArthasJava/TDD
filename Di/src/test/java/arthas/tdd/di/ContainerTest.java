@@ -163,6 +163,8 @@ public class ContainerTest {
                 Dependency dependency;
             }
 
+            static class SubclassWithFieldInjection extends ComponentWithFieldInjection { }
+
             @Test
             void should_inject_dependency_via_field() {
                 Dependency dependency = new Dependency() { };
@@ -182,6 +184,20 @@ public class ContainerTest {
                 ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(
                         ComponentWithFieldInjection.class);
                 assertEquals(List.of(Dependency.class), provider.getDependencies());
+            }
+
+            @Test
+            void should_inject_dependency_via_superclass_field_injection() {
+                Dependency dependency = new Dependency() { };
+
+                contextConfig.bind(Dependency.class, dependency);
+                contextConfig.bind(SubclassWithFieldInjection.class, SubclassWithFieldInjection.class);
+
+                Optional<SubclassWithFieldInjection> component = contextConfig.getContext().get(
+                        SubclassWithFieldInjection.class);
+                assertTrue(component.isPresent());
+
+                assertSame(dependency, component.get().dependency);
             }
 
             // TODO throw exception if field is final
