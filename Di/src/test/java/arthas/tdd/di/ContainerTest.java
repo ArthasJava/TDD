@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -155,8 +156,35 @@ public class ContainerTest {
             }
         }
 
+        @Nested
         public class FieldInjection {
+            static class ComponentWithFieldInjection implements Component {
+                @Inject
+                Dependency dependency;
+            }
 
+            @Test
+            void should_inject_dependency_via_field() {
+                Dependency dependency = new Dependency() { };
+
+                contextConfig.bind(Dependency.class, dependency);
+                contextConfig.bind(ComponentWithFieldInjection.class, ComponentWithFieldInjection.class);
+
+                Optional<ComponentWithFieldInjection> component = contextConfig.getContext().get(
+                        ComponentWithFieldInjection.class);
+                assertTrue(component.isPresent());
+
+                assertSame(dependency, component.get().dependency);
+            }
+
+            @Test
+            void should_include_field_dependency_in_dependencies() {
+                ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(
+                        ComponentWithFieldInjection.class);
+                assertEquals(List.of(Dependency.class), provider.getDependencies());
+            }
+
+            // TODO throw exception if field is final
         }
 
         public class MethodInjection {
