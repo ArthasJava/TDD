@@ -40,68 +40,7 @@ public class ContainerTest {
         }
 
         @Nested
-        public class ConstructorInjection {
-            // TODO no args constructor
-            @Test
-            void should_bind_type_to_a_class_with_default_constructor() {
-                contextConfig.bind(Component.class, ComponentWithDefaultConstructor.class);
-
-                Optional<Component> component = contextConfig.getContext().get(Component.class);
-                assertTrue(component.isPresent());
-                assertInstanceOf(ComponentWithDefaultConstructor.class, component.get());
-            }
-            // TODO with dependencies
-
-            @Test
-            void should_bind_type_a_class_with_inject_constructor() {
-                Dependency dependency = new Dependency() { };
-
-                contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
-                contextConfig.bind(Dependency.class, dependency);
-
-                Optional<Component> component = contextConfig.getContext().get(Component.class);
-                assertTrue(component.isPresent());
-                Component instance = component.get();
-                assertInstanceOf(ComponentWithInjectConstructor.class, instance);
-                assertSame(dependency, ((ComponentWithInjectConstructor) instance).getDependency());
-            }
-
-            // TODO A --> B --> C
-            @Test
-            void should_bind_type_a_class_with_transitive_dependencies() {
-                contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
-                contextConfig.bind(Dependency.class, DependencyWithInjectConstructor.class);
-                contextConfig.bind(String.class, "indirect of dependency");
-
-                Optional<Component> component = contextConfig.getContext().get(Component.class);
-                assertTrue(component.isPresent());
-                assertInstanceOf(ComponentWithInjectConstructor.class, component.get());
-
-                Dependency dependency = ((ComponentWithInjectConstructor) component.get()).getDependency();
-                assertNotNull(dependency);
-                assertInstanceOf(DependencyWithInjectConstructor.class, dependency);
-
-                assertEquals("indirect of dependency", ((DependencyWithInjectConstructor) dependency).getDependency());
-            }
-
-            // TODO multi inject constructors
-
-            @Test
-            void should_throw_exception_if_multi_inject_constructor_provided() {
-                assertThrows(IllegalComponentException.class,
-                        () -> contextConfig.bind(Component.class, ComponentWithMultiInjectConstructors.class));
-            }
-
-            // TODO no default constructor and inject constructor
-
-            @Test
-            void should_throw_exception_if_no_inject_nor_default_constructor_provided() {
-                assertThrows(IllegalComponentException.class, () -> contextConfig.bind(Component.class,
-                        ComponentWithNoInjectConstructorNorDefaultConstructor.class));
-            }
-
-            // TODO dependencies not exist
-
+        public class DependencyCheck {
             @Test
             void should_throw_exception_if_dependency_not_found() {
                 contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
@@ -139,6 +78,68 @@ public class ContainerTest {
                 assertTrue(components.contains(Component.class));
                 assertTrue(components.contains(Dependency.class));
                 assertTrue(components.contains(AnotherDependency.class));
+            }
+        }
+        @Nested
+        public class ConstructorInjection {
+            // TODO no args constructor
+            @Test
+            void should_bind_type_to_a_class_with_default_constructor() {
+                contextConfig.bind(Component.class, ComponentWithDefaultConstructor.class);
+
+                Optional<Component> component = contextConfig.getContext().get(Component.class);
+                assertTrue(component.isPresent());
+                assertInstanceOf(ComponentWithDefaultConstructor.class, component.get());
+            }
+
+            // TODO with dependencies
+
+            @Test
+            void should_bind_type_a_class_with_inject_constructor() {
+                Dependency dependency = new Dependency() { };
+
+                contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
+                contextConfig.bind(Dependency.class, dependency);
+
+                Optional<Component> component = contextConfig.getContext().get(Component.class);
+                assertTrue(component.isPresent());
+                Component instance = component.get();
+                assertInstanceOf(ComponentWithInjectConstructor.class, instance);
+                assertSame(dependency, ((ComponentWithInjectConstructor) instance).getDependency());
+            }
+            // TODO A --> B --> C
+
+            @Test
+            void should_bind_type_a_class_with_transitive_dependencies() {
+                contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
+                contextConfig.bind(Dependency.class, DependencyWithInjectConstructor.class);
+                contextConfig.bind(String.class, "indirect of dependency");
+
+                Optional<Component> component = contextConfig.getContext().get(Component.class);
+                assertTrue(component.isPresent());
+                assertInstanceOf(ComponentWithInjectConstructor.class, component.get());
+
+                Dependency dependency = ((ComponentWithInjectConstructor) component.get()).getDependency();
+                assertNotNull(dependency);
+                assertInstanceOf(DependencyWithInjectConstructor.class, dependency);
+
+                assertEquals("indirect of dependency", ((DependencyWithInjectConstructor) dependency).getDependency());
+            }
+
+            // TODO multi inject constructors
+
+            @Test
+            void should_throw_exception_if_multi_inject_constructor_provided() {
+                assertThrows(IllegalComponentException.class,
+                        () -> contextConfig.bind(Component.class, ComponentWithMultiInjectConstructors.class));
+            }
+
+            // TODO no default constructor and inject constructor
+
+            @Test
+            void should_throw_exception_if_no_inject_nor_default_constructor_provided() {
+                assertThrows(IllegalComponentException.class, () -> contextConfig.bind(Component.class,
+                        ComponentWithNoInjectConstructorNorDefaultConstructor.class));
             }
 
             static abstract class AbstractComponent implements Component {
