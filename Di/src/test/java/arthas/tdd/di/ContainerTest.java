@@ -80,6 +80,7 @@ public class ContainerTest {
                 assertTrue(components.contains(AnotherDependency.class));
             }
         }
+
         @Nested
         public class ConstructorInjection {
             // TODO no args constructor
@@ -126,24 +127,7 @@ public class ContainerTest {
                 assertEquals("indirect of dependency", ((DependencyWithInjectConstructor) dependency).getDependency());
             }
 
-            // TODO multi inject constructors
-
-            @Test
-            void should_throw_exception_if_multi_inject_constructor_provided() {
-                assertThrows(IllegalComponentException.class,
-                        () -> contextConfig.bind(Component.class, ComponentWithMultiInjectConstructors.class));
-            }
-
-            // TODO no default constructor and inject constructor
-
-            @Test
-            void should_throw_exception_if_no_inject_nor_default_constructor_provided() {
-                assertThrows(IllegalComponentException.class, () -> contextConfig.bind(Component.class,
-                        ComponentWithNoInjectConstructorNorDefaultConstructor.class));
-            }
-
-            static abstract class AbstractComponent implements Component {
-            }
+            static abstract class AbstractComponent implements Component { }
 
             @Test
             void should_throw_exception_if_component_is_abstract() {
@@ -155,6 +139,18 @@ public class ContainerTest {
             void should_throw_exception_if_component_is_interface() {
                 assertThrows(IllegalComponentException.class,
                         () -> new ConstructorInjectionProvider<>(Component.class));
+            }
+
+            @Test
+            void should_throw_exception_if_multi_inject_constructor_provided() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new ConstructorInjectionProvider<>(ComponentWithMultiInjectConstructors.class));
+            }
+
+            @Test
+            void should_throw_exception_if_no_inject_nor_default_constructor_provided() {
+                assertThrows(IllegalComponentException.class, () -> new ConstructorInjectionProvider<>(
+                        ComponentWithNoInjectConstructorNorDefaultConstructor.class));
             }
         }
 
