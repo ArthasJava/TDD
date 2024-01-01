@@ -6,10 +6,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Nested
 public class InjectionTest {
@@ -24,38 +22,33 @@ public class InjectionTest {
     public class ConstructorInjection {
         @Test
         void should_bind_type_to_a_class_with_default_constructor() {
-            contextConfig.bind(Component.class, ComponentWithDefaultConstructor.class);
+            Class<Component> type = Component.class;
+            Class<ComponentWithDefaultConstructor> implementation = ComponentWithDefaultConstructor.class;
 
-            Optional<Component> component = contextConfig.getContext().get(Component.class);
-            assertTrue(component.isPresent());
-            assertInstanceOf(ComponentWithDefaultConstructor.class, component.get());
+            Component component = getComponent(type, implementation);
+
+            assertInstanceOf(implementation, component);
         }
 
         @Test
         void should_bind_type_a_class_with_inject_constructor() {
             Dependency dependency = new Dependency() { };
-
-            contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
             contextConfig.bind(Dependency.class, dependency);
 
-            Optional<Component> component = contextConfig.getContext().get(Component.class);
-            assertTrue(component.isPresent());
-            Component instance = component.get();
+            Component instance = getComponent(Component.class, ComponentWithInjectConstructor.class);
+
             assertInstanceOf(ComponentWithInjectConstructor.class, instance);
             assertSame(dependency, ((ComponentWithInjectConstructor) instance).getDependency());
         }
 
         @Test
         void should_bind_type_a_class_with_transitive_dependencies() {
-            contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
             contextConfig.bind(Dependency.class, DependencyWithInjectConstructor.class);
             contextConfig.bind(String.class, "indirect of dependency");
 
-            Optional<Component> component = contextConfig.getContext().get(Component.class);
-            assertTrue(component.isPresent());
-            assertInstanceOf(ComponentWithInjectConstructor.class, component.get());
+            Dependency dependency = ((ComponentWithInjectConstructor) getComponent(Component.class,
+                    ComponentWithInjectConstructor.class)).getDependency();
 
-            Dependency dependency = ((ComponentWithInjectConstructor) component.get()).getDependency();
             assertNotNull(dependency);
             assertInstanceOf(DependencyWithInjectConstructor.class, dependency);
 
@@ -95,6 +88,12 @@ public class InjectionTest {
         }
     }
 
+    private <T, R extends T> T getComponent(Class<T> type, Class<R> implementation) {
+        contextConfig.bind(type, implementation);
+        T component = contextConfig.getContext().get(type).get();
+        return component;
+    }
+
     @Nested
     public class FieldInjection {
         static class ComponentWithFieldInjection implements Component {
@@ -107,16 +106,13 @@ public class InjectionTest {
         @Test
         void should_inject_dependency_via_field() {
             Dependency dependency = new Dependency() { };
-
             contextConfig.bind(Dependency.class, dependency);
-            contextConfig.bind(FieldInjection.ComponentWithFieldInjection.class,
+
+            ComponentWithFieldInjection component = getComponent(FieldInjection.ComponentWithFieldInjection.class,
                     FieldInjection.ComponentWithFieldInjection.class);
+            ;
 
-            Optional<FieldInjection.ComponentWithFieldInjection> component = contextConfig.getContext()
-                    .get(FieldInjection.ComponentWithFieldInjection.class);
-            assertTrue(component.isPresent());
-
-            assertSame(dependency, component.get().dependency);
+            assertSame(dependency, component.dependency);
         }
 
         @Test
@@ -129,16 +125,12 @@ public class InjectionTest {
         @Test
         void should_inject_dependency_via_superclass_field_injection() {
             Dependency dependency = new Dependency() { };
-
             contextConfig.bind(Dependency.class, dependency);
-            contextConfig.bind(FieldInjection.SubclassWithFieldInjection.class,
+
+            SubclassWithFieldInjection component = getComponent(FieldInjection.SubclassWithFieldInjection.class,
                     FieldInjection.SubclassWithFieldInjection.class);
 
-            Optional<FieldInjection.SubclassWithFieldInjection> component = contextConfig.getContext()
-                    .get(FieldInjection.SubclassWithFieldInjection.class);
-            assertTrue(component.isPresent());
-
-            assertSame(dependency, component.get().dependency);
+            assertSame(dependency, component.dependency);
         }
 
         static class FinalInjectField {
@@ -166,12 +158,9 @@ public class InjectionTest {
 
         @Test
         void should_invoke_inject_method_even_if_no_dependency_declared() {
-            contextConfig.bind(MethodInjection.MethodInjectionWithNoDependencies.class,
+            MethodInjection.MethodInjectionWithNoDependencies component = getComponent(
+                    MethodInjection.MethodInjectionWithNoDependencies.class,
                     MethodInjection.MethodInjectionWithNoDependencies.class);
-
-            MethodInjection.MethodInjectionWithNoDependencies component = contextConfig.getContext()
-                    .get(MethodInjection.MethodInjectionWithNoDependencies.class)
-                    .get();
 
             assertTrue(component.called);
         }
@@ -188,14 +177,10 @@ public class InjectionTest {
         @Test
         void should_inject_dependency_via_inject_method() {
             Dependency dependency = new Dependency() { };
-
             contextConfig.bind(Dependency.class, dependency);
-            contextConfig.bind(MethodInjection.InjectMethodWithDependency.class,
-                    MethodInjection.InjectMethodWithDependency.class);
 
-            MethodInjection.InjectMethodWithDependency component = contextConfig.getContext()
-                    .get(MethodInjection.InjectMethodWithDependency.class)
-                    .get();
+            MethodInjection.InjectMethodWithDependency component = getComponent(
+                    MethodInjection.InjectMethodWithDependency.class, MethodInjection.InjectMethodWithDependency.class);
 
             assertEquals(dependency, component.dependency);
         }
@@ -227,12 +212,8 @@ public class InjectionTest {
 
         @Test
         void should_inject_dependencies_via_inject_method_from_superclass() {
-            contextConfig.bind(MethodInjection.SubClassWithInjectMethod.class,
-                    MethodInjection.SubClassWithInjectMethod.class);
-
-            MethodInjection.SubClassWithInjectMethod component = contextConfig.getContext()
-                    .get(MethodInjection.SubClassWithInjectMethod.class)
-                    .get();
+            MethodInjection.SubClassWithInjectMethod component = getComponent(
+                    MethodInjection.SubClassWithInjectMethod.class, MethodInjection.SubClassWithInjectMethod.class);
 
             assertEquals(1, component.superCalled);
             assertEquals(2, component.subCalled);
@@ -247,11 +228,9 @@ public class InjectionTest {
 
         @Test
         void should_only_call_once_if_subclass_override_supperclass_inject_method_with_inject() {
-            contextConfig.bind(MethodInjection.SubClassOverrideSuperClassWithInject.class,
+            MethodInjection.SubClassOverrideSuperClassWithInject component = getComponent(
+                    MethodInjection.SubClassOverrideSuperClassWithInject.class,
                     MethodInjection.SubClassOverrideSuperClassWithInject.class);
-            MethodInjection.SubClassOverrideSuperClassWithInject component = contextConfig.getContext()
-                    .get(MethodInjection.SubClassOverrideSuperClassWithInject.class)
-                    .get();
 
             assertEquals(1, component.superCalled);
         }
@@ -264,16 +243,14 @@ public class InjectionTest {
 
         @Test
         void should_not_call_inject_method_if_override_with_no_inject() {
-            contextConfig.bind(MethodInjection.SubClassOverrideSuperClassWithNoInject.class,
+            MethodInjection.SubClassOverrideSuperClassWithNoInject component = getComponent(
+                    MethodInjection.SubClassOverrideSuperClassWithNoInject.class,
                     MethodInjection.SubClassOverrideSuperClassWithNoInject.class);
-            MethodInjection.SubClassOverrideSuperClassWithNoInject component = contextConfig.getContext()
-                    .get(MethodInjection.SubClassOverrideSuperClassWithNoInject.class)
-                    .get();
 
             assertEquals(0, component.superCalled);
         }
 
-        static class InjectMethodithTypeParameter {
+        static class InjectMethodWithTypeParameter {
             @Inject
             <T> void install() {
             }
@@ -282,7 +259,7 @@ public class InjectionTest {
         @Test
         void should_throw_exception_if_inject_method_has_type_parameter() {
             assertThrows(IllegalComponentException.class,
-                    () -> new ConstructorInjectionProvider<>(MethodInjection.InjectMethodithTypeParameter.class));
+                    () -> new ConstructorInjectionProvider<>(InjectMethodWithTypeParameter.class));
         }
     }
 }
