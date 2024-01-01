@@ -14,14 +14,11 @@ import static org.mockito.Mockito.*;
 
 @Nested
 public class InjectionTest {
-    private ContextConfig contextConfig;
     private final Dependency dependency = mock(Dependency.class);
     private Context context = mock(Context.class);
 
     @BeforeEach
     void setUp() {
-        contextConfig = new ContextConfig();
-        contextConfig.bind(Dependency.class, dependency);
         when(context.get(eq(Dependency.class))).thenReturn(Optional.of(dependency));
     }
 
@@ -45,9 +42,6 @@ public class InjectionTest {
 
         @Test
         void should_bind_type_a_class_with_transitive_dependencies() {
-            //            contextConfig.bind(Dependency.class, DependencyWithInjectConstructor.class);
-            //            contextConfig.bind(String.class, "");
-
             when(context.get(eq(Dependency.class))).thenReturn(
                     Optional.of(new DependencyWithInjectConstructor("indirect of dependency")));
 
