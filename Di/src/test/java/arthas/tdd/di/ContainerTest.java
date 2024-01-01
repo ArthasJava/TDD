@@ -203,8 +203,118 @@ public class ContainerTest {
             // TODO throw exception if field is final
         }
 
+        @Nested
         public class MethodInjection {
+            static class MethodInjectionWithNoDependencies {
+                boolean called = false;
 
+                @Inject
+                void install() {
+                    this.called = true;
+                }
+            }
+
+            @Test
+            void should_invoke_inject_method_even_if_no_dependency_declared() {
+                contextConfig.bind(MethodInjectionWithNoDependencies.class, MethodInjectionWithNoDependencies.class);
+
+                MethodInjectionWithNoDependencies component = contextConfig.getContext()
+                        .get(MethodInjectionWithNoDependencies.class)
+                        .get();
+
+                assertTrue(component.called);
+            }
+
+            static class InjectMethodWithDependency {
+                Dependency dependency;
+
+                @Inject
+                void install(Dependency dependency) {
+                    this.dependency = dependency;
+                }
+            }
+
+            @Test
+            void should_inject_dependency_via_inject_method() {
+                Dependency dependency = new Dependency() { };
+
+                contextConfig.bind(Dependency.class, dependency);
+                contextConfig.bind(InjectMethodWithDependency.class, InjectMethodWithDependency.class);
+
+                InjectMethodWithDependency component = contextConfig.getContext()
+                        .get(InjectMethodWithDependency.class)
+                        .get();
+
+                assertEquals(dependency, component.dependency);
+            }
+
+            @Test
+            void should_include_dependencies_from_inject_method() {
+                ConstructorInjectionProvider<InjectMethodWithDependency> provider = new ConstructorInjectionProvider<>(InjectMethodWithDependency.class);
+                assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
+            }
+
+            static class SuperClassWithInjectMethod {
+                int superCalled = 0;
+
+                @Inject
+                void install() {
+                    superCalled++;
+                }
+            }
+
+            static class SubClassWithInjectMethod extends SuperClassWithInjectMethod {
+                int subCalled;
+                @Inject
+                void installAnother() {
+                    subCalled = superCalled + 1;
+                }
+            }
+
+            @Test
+            void should_inject_dependencies_via_inject_method_from_superclass() {
+                contextConfig.bind(SubClassWithInjectMethod.class, SubClassWithInjectMethod.class);
+
+                SubClassWithInjectMethod component = contextConfig.getContext()
+                        .get(SubClassWithInjectMethod.class)
+                        .get();
+
+                assertEquals(1, component.superCalled);
+                assertEquals(2, component.subCalled);
+            }
+
+            static class SubClassOverrideSuperClassWithInject extends SuperClassWithInjectMethod {
+                @Inject
+                void install() {
+                    superCalled++;
+                } 
+            }
+
+            @Test
+            void should_only_call_once_if_subclass_override_supperclass_inject_method_with_inject() {
+                contextConfig.bind(SubClassOverrideSuperClassWithInject.class, SubClassOverrideSuperClassWithInject.class);
+                SubClassOverrideSuperClassWithInject component = contextConfig.getContext()
+                        .get(SubClassOverrideSuperClassWithInject.class)
+                        .get();
+
+                assertEquals(1, component.superCalled);
+            }
+
+            static class SubClassOverrideSuperClassWithNoInject extends SuperClassWithInjectMethod {
+                void install() {
+                    super.install();
+                }
+            }
+
+            @Test
+            void should_not_call_inject_method_if_override_with_no_inject() {
+                contextConfig.bind(SubClassOverrideSuperClassWithNoInject.class, SubClassOverrideSuperClassWithNoInject.class);
+                SubClassOverrideSuperClassWithNoInject component = contextConfig.getContext()
+                        .get(SubClassOverrideSuperClassWithNoInject.class)
+                        .get();
+
+                assertEquals(0, component.superCalled);
+            }
         }
     }
 
