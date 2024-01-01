@@ -24,7 +24,7 @@ public class InjectionTest {
     @Nested
     public class ConstructorInjection {
         @Test
-        void should_bind_type_to_a_class_with_default_constructor() {
+        void should_call_default_constructor_if_no_inject_constructor() {
             Component component = new ConstructorInjectionProvider<>(ComponentWithDefaultConstructor.class).get(
                     context);
 
@@ -32,7 +32,7 @@ public class InjectionTest {
         }
 
         @Test
-        void should_bind_type_a_class_with_inject_constructor() {
+        void should_inject_dependency_via_inject_constructor() {
             ComponentWithInjectConstructor instance = new ConstructorInjectionProvider<>(
                     ComponentWithInjectConstructor.class).get(context);
 
@@ -89,7 +89,7 @@ public class InjectionTest {
         }
 
         @Test
-        void should_include_field_dependency_in_dependencies() {
+        void should_include_dependencies_from_inject_field() {
             ConstructorInjectionProvider<ComponentWithFieldInjection> provider = new ConstructorInjectionProvider<>(
                     ComponentWithFieldInjection.class);
             assertEquals(List.of(Dependency.class), provider.getDependencies());
