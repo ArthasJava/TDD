@@ -12,10 +12,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @Nested
 public class InjectionTest {
     private ContextConfig contextConfig;
+    private final Dependency dependency = new Dependency() { };
 
     @BeforeEach
     void setUp() {
         contextConfig = new ContextConfig();
+        contextConfig.bind(Dependency.class, dependency);
     }
 
     @Nested
@@ -32,9 +34,6 @@ public class InjectionTest {
 
         @Test
         void should_bind_type_a_class_with_inject_constructor() {
-            Dependency dependency = new Dependency() { };
-            contextConfig.bind(Dependency.class, dependency);
-
             Component instance = getComponent(Component.class, ComponentWithInjectConstructor.class);
 
             assertInstanceOf(ComponentWithInjectConstructor.class, instance);
@@ -105,12 +104,8 @@ public class InjectionTest {
 
         @Test
         void should_inject_dependency_via_field() {
-            Dependency dependency = new Dependency() { };
-            contextConfig.bind(Dependency.class, dependency);
-
             ComponentWithFieldInjection component = getComponent(FieldInjection.ComponentWithFieldInjection.class,
                     FieldInjection.ComponentWithFieldInjection.class);
-            ;
 
             assertSame(dependency, component.dependency);
         }
@@ -124,9 +119,6 @@ public class InjectionTest {
 
         @Test
         void should_inject_dependency_via_superclass_field_injection() {
-            Dependency dependency = new Dependency() { };
-            contextConfig.bind(Dependency.class, dependency);
-
             SubclassWithFieldInjection component = getComponent(FieldInjection.SubclassWithFieldInjection.class,
                     FieldInjection.SubclassWithFieldInjection.class);
 
@@ -176,9 +168,6 @@ public class InjectionTest {
 
         @Test
         void should_inject_dependency_via_inject_method() {
-            Dependency dependency = new Dependency() { };
-            contextConfig.bind(Dependency.class, dependency);
-
             MethodInjection.InjectMethodWithDependency component = getComponent(
                     MethodInjection.InjectMethodWithDependency.class, MethodInjection.InjectMethodWithDependency.class);
 
