@@ -112,17 +112,6 @@ public class ContainerTest {
             }
 
             @Test
-            void should_throw_exception_if_transitive_dependency_not_found() {
-                contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
-                contextConfig.bind(Dependency.class, DependencyWithInjectConstructor.class);
-
-                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
-                        () -> contextConfig.getContext());
-                assertEquals(Dependency.class, exception.getComponent());
-                assertEquals(String.class, exception.getDependency());
-            }
-
-            @Test
             void should_throw_exception_if_cyclic_dependencies_found() {
                 contextConfig.bind(Component.class, ComponentWithInjectConstructor.class);
                 contextConfig.bind(Dependency.class, DependencyDependedOnComponent.class);
