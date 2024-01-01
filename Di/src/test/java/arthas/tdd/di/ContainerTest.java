@@ -33,9 +33,6 @@ public class ContainerTest {
             assertSame(instance, component.get());
         }
 
-        // TODO abstract clas
-        // TODO interface
-
         @Test
         void should_return_empty_if_component_not_defined() {
             Optional<Component> component = contextConfig.getContext().get(Component.class);
@@ -154,6 +151,21 @@ public class ContainerTest {
                 assertTrue(components.contains(Dependency.class));
                 assertTrue(components.contains(AnotherDependency.class));
             }
+
+            static abstract class AbstractComponent implements Component {
+            }
+
+            @Test
+            void should_throw_exception_if_component_is_abstract() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new ConstructorInjectionProvider<>(AbstractComponent.class));
+            }
+
+            @Test
+            void should_throw_exception_if_component_is_interface() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new ConstructorInjectionProvider<>(Component.class));
+            }
         }
 
         @Nested
@@ -172,8 +184,8 @@ public class ContainerTest {
                 contextConfig.bind(Dependency.class, dependency);
                 contextConfig.bind(ComponentWithFieldInjection.class, ComponentWithFieldInjection.class);
 
-                Optional<ComponentWithFieldInjection> component = contextConfig.getContext().get(
-                        ComponentWithFieldInjection.class);
+                Optional<ComponentWithFieldInjection> component = contextConfig.getContext()
+                        .get(ComponentWithFieldInjection.class);
                 assertTrue(component.isPresent());
 
                 assertSame(dependency, component.get().dependency);
@@ -193,14 +205,25 @@ public class ContainerTest {
                 contextConfig.bind(Dependency.class, dependency);
                 contextConfig.bind(SubclassWithFieldInjection.class, SubclassWithFieldInjection.class);
 
-                Optional<SubclassWithFieldInjection> component = contextConfig.getContext().get(
-                        SubclassWithFieldInjection.class);
+                Optional<SubclassWithFieldInjection> component = contextConfig.getContext()
+                        .get(SubclassWithFieldInjection.class);
                 assertTrue(component.isPresent());
 
                 assertSame(dependency, component.get().dependency);
             }
 
             // TODO throw exception if field is final
+
+            static class FinalInjectField {
+                @Inject
+                final Dependency dependency = null;
+            }
+
+            @Test
+            void should_throw_exception_if_field_is_final() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new ConstructorInjectionProvider<>(FinalInjectField.class));
+            }
         }
 
         @Nested
@@ -250,7 +273,8 @@ public class ContainerTest {
 
             @Test
             void should_include_dependencies_from_inject_method() {
-                ConstructorInjectionProvider<InjectMethodWithDependency> provider = new ConstructorInjectionProvider<>(InjectMethodWithDependency.class);
+                ConstructorInjectionProvider<InjectMethodWithDependency> provider = new ConstructorInjectionProvider<>(
+                        InjectMethodWithDependency.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
             }
 
@@ -265,6 +289,7 @@ public class ContainerTest {
 
             static class SubClassWithInjectMethod extends SuperClassWithInjectMethod {
                 int subCalled;
+
                 @Inject
                 void installAnother() {
                     subCalled = superCalled + 1;
@@ -287,12 +312,13 @@ public class ContainerTest {
                 @Inject
                 void install() {
                     superCalled++;
-                } 
+                }
             }
 
             @Test
             void should_only_call_once_if_subclass_override_supperclass_inject_method_with_inject() {
-                contextConfig.bind(SubClassOverrideSuperClassWithInject.class, SubClassOverrideSuperClassWithInject.class);
+                contextConfig.bind(SubClassOverrideSuperClassWithInject.class,
+                        SubClassOverrideSuperClassWithInject.class);
                 SubClassOverrideSuperClassWithInject component = contextConfig.getContext()
                         .get(SubClassOverrideSuperClassWithInject.class)
                         .get();
@@ -308,12 +334,25 @@ public class ContainerTest {
 
             @Test
             void should_not_call_inject_method_if_override_with_no_inject() {
-                contextConfig.bind(SubClassOverrideSuperClassWithNoInject.class, SubClassOverrideSuperClassWithNoInject.class);
+                contextConfig.bind(SubClassOverrideSuperClassWithNoInject.class,
+                        SubClassOverrideSuperClassWithNoInject.class);
                 SubClassOverrideSuperClassWithNoInject component = contextConfig.getContext()
                         .get(SubClassOverrideSuperClassWithNoInject.class)
                         .get();
 
                 assertEquals(0, component.superCalled);
+            }
+
+            static class InjectMethodithTypeParameter {
+                @Inject
+                <T> void install() {
+                }
+            }
+
+            @Test
+            void should_throw_exception_if_inject_method_has_type_parameter() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new ConstructorInjectionProvider<>(InjectMethodithTypeParameter.class));
             }
         }
     }

@@ -6,6 +6,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,9 +23,18 @@ class ConstructorInjectionProvider<T> implements ComponentProvider<T> {
     private final List<Method> injectMethods;
 
     public ConstructorInjectionProvider(Class<T> component) {
+        if (Modifier.isAbstract(component.getModifiers())) {
+            throw new IllegalComponentException();
+        }
         this.injectConstructor = getInjectConstructor(component);
         this.injectFields = getInjectFields(component);
         this.injectMethods = getInjectMethods(component);
+        if (injectFields.stream().anyMatch(field -> Modifier.isFinal(field.getModifiers()))) {
+            throw new IllegalComponentException();
+        }
+        if (injectMethods.stream().anyMatch(method -> method.getTypeParameters().length != 0)) {
+            throw new IllegalComponentException();
+        }
     }
 
     @Override
