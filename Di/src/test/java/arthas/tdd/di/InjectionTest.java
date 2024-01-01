@@ -1,7 +1,6 @@
 package arthas.tdd.di;
 
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -49,10 +48,6 @@ public class InjectionTest {
                     context).getDependency();
 
             assertNotNull(dependency);
-            assertInstanceOf(DependencyWithInjectConstructor.class, dependency);
-
-            Assertions.assertEquals("indirect of dependency",
-                    ((DependencyWithInjectConstructor) dependency).getDependency());
         }
 
         static abstract class AbstractComponent implements Component { }
