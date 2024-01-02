@@ -25,26 +25,36 @@ public class InjectionTest {
     public class ConstructorInjection {
         @Nested
         class Injection {
+            static class DefaultConstructor { }
+
             @Test
             void should_call_default_constructor_if_no_inject_constructor() {
-                Component component = new ConstructorInjectionProvider<>(ComponentWithDefaultConstructor.class).get(
+                DefaultConstructor component = new ConstructorInjectionProvider<>(DefaultConstructor.class).get(
                         context);
 
-                assertInstanceOf(ComponentWithDefaultConstructor.class, component);
+                assertNotNull(component);
+            }
+
+            static class InjectConstructor {
+                Dependency dependency;
+
+                @Inject
+                public InjectConstructor(Dependency dependency) {
+                    this.dependency = dependency;
+                }
             }
 
             @Test
             void should_inject_dependency_via_inject_constructor() {
-                ComponentWithInjectConstructor instance = new ConstructorInjectionProvider<>(
-                        ComponentWithInjectConstructor.class).get(context);
+                InjectConstructor instance = new ConstructorInjectionProvider<>(InjectConstructor.class).get(context);
 
-                assertSame(dependency, instance.getDependency());
+                assertSame(dependency, instance.dependency);
             }
 
             @Test
             void should_include_dependencies_from_inject_constructor() {
-                ConstructorInjectionProvider<ComponentWithInjectConstructor> provider
-                        = new ConstructorInjectionProvider<>(ComponentWithInjectConstructor.class);
+                ConstructorInjectionProvider<InjectConstructor> provider = new ConstructorInjectionProvider<>(
+                        InjectConstructor.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
             }
         }
@@ -65,16 +75,31 @@ public class InjectionTest {
                         () -> new ConstructorInjectionProvider<>(Component.class));
             }
 
+            static class MultiInjectConstructors {
+                @Inject
+                public MultiInjectConstructors(AnotherDependency dependency) {
+                }
+
+                @Inject
+                public MultiInjectConstructors(Dependency dependency) {
+                }
+            }
+
             @Test
             void should_throw_exception_if_multi_inject_constructor_provided() {
                 assertThrows(IllegalComponentException.class,
-                        () -> new ConstructorInjectionProvider<>(ComponentWithMultiInjectConstructors.class));
+                        () -> new ConstructorInjectionProvider<>(MultiInjectConstructors.class));
+            }
+
+            static class NoInjectNorDefaultConstructor {
+                public NoInjectNorDefaultConstructor(Dependency dependency) {
+                }
             }
 
             @Test
             void should_throw_exception_if_no_inject_nor_default_constructor_provided() {
-                assertThrows(IllegalComponentException.class, () -> new ConstructorInjectionProvider<>(
-                        ComponentWithNoInjectConstructorNorDefaultConstructor.class));
+                assertThrows(IllegalComponentException.class,
+                        () -> new ConstructorInjectionProvider<>(NoInjectNorDefaultConstructor.class));
             }
         }
     }

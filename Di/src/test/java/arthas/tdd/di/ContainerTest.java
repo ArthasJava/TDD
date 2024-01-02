@@ -101,11 +101,6 @@ interface Dependency { }
 
 interface AnotherDependency { }
 
-class ComponentWithDefaultConstructor implements Component {
-    public ComponentWithDefaultConstructor() {
-    }
-}
-
 class ComponentWithInjectConstructor implements Component {
     private Dependency dependency;
 
@@ -115,34 +110,6 @@ class ComponentWithInjectConstructor implements Component {
     }
 
     public Dependency getDependency() {
-        return dependency;
-    }
-}
-
-class ComponentWithMultiInjectConstructors implements Component {
-    @Inject
-    public ComponentWithMultiInjectConstructors(String name) {
-    }
-
-    @Inject
-    public ComponentWithMultiInjectConstructors(String name, int age) {
-    }
-}
-
-class ComponentWithNoInjectConstructorNorDefaultConstructor implements Component {
-    public ComponentWithNoInjectConstructorNorDefaultConstructor(String name, int age) {
-    }
-}
-
-class DependencyWithInjectConstructor implements Dependency {
-    private String dependency;
-
-    @Inject
-    public DependencyWithInjectConstructor(String dependency) {
-        this.dependency = dependency;
-    }
-
-    public String getDependency() {
         return dependency;
     }
 }
