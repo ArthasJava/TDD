@@ -2,6 +2,7 @@ package arthas.tdd.di;
 
 import jakarta.inject.Inject;
 
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Stream.concat;
@@ -65,8 +67,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
-        List<Constructor<?>> injectConstructors = stream(implementation.getConstructors()).filter(
-                c -> c.isAnnotationPresent(Inject.class)).collect(Collectors.toList());
+        List<Constructor<?>> injectConstructors = injectable(implementation.getConstructors()).collect(Collectors.toList());
         if (injectConstructors.size() > 1) {
             throw new IllegalComponentException();
         }
@@ -83,8 +84,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         List<Field> injectionFields = new ArrayList<>();
         Class<? super T> current = component;
         while (current != Object.class) {
-            injectionFields.addAll(
-                    stream(current.getDeclaredFields()).filter(f -> f.isAnnotationPresent(Inject.class)).toList());
+            injectionFields.addAll(injectable(current.getDeclaredFields()).toList());
             current = current.getSuperclass();
         }
         return injectionFields;
@@ -95,7 +95,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         Class<?> current = component;
         while (current != Object.class) {
             methods.addAll(
-                    stream(current.getDeclaredMethods()).filter(method -> method.isAnnotationPresent(Inject.class))
+                    injectable(current.getDeclaredMethods())
                             .filter(method -> methods.stream()
                                     .noneMatch(o -> o.getName().equals(method.getName()) && Arrays.equals(
                                             o.getParameterTypes(), method.getParameterTypes())))
@@ -108,5 +108,9 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         }
         Collections.reverse(methods);
         return methods;
+    }
+
+    private static <T extends AnnotatedElement> Stream<T> injectable(T[] declaredFields) {
+        return stream(declaredFields).filter(f -> f.isAnnotationPresent(Inject.class));
     }
 }
