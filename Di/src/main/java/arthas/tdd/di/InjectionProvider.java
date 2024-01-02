@@ -67,7 +67,8 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
-        List<Constructor<?>> injectConstructors = injectable(implementation.getConstructors()).collect(Collectors.toList());
+        List<Constructor<?>> injectConstructors = injectable(implementation.getConstructors()).collect(
+                Collectors.toList());
         if (injectConstructors.size() > 1) {
             throw new IllegalComponentException();
         }
@@ -95,12 +96,8 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         Class<?> current = component;
         while (current != Object.class) {
             methods.addAll(
-                    injectable(current.getDeclaredMethods())
-                            .filter(method -> methods.stream()
-                                    .noneMatch(o -> isOverride(method, o)))
-                            .filter(method -> stream(component.getDeclaredMethods()).filter(
-                                            method1 -> !method1.isAnnotationPresent(Inject.class))
-                                    .noneMatch(o -> isOverride(method, o)))
+                    injectable(current.getDeclaredMethods()).filter(method -> isOverrideByInjectMethod(method, methods))
+                            .filter(method -> isOverrideByNoInjectMethod(component, method))
                             .toList());
             current = current.getSuperclass();
         }
@@ -110,6 +107,15 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     private static <T extends AnnotatedElement> Stream<T> injectable(T[] declaredFields) {
         return stream(declaredFields).filter(f -> f.isAnnotationPresent(Inject.class));
+    }
+
+    private static boolean isOverrideByInjectMethod(Method method, List<Method> methods) {
+        return methods.stream().noneMatch(o -> isOverride(method, o));
+    }
+
+    private static <T> boolean isOverrideByNoInjectMethod(Class<T> component, Method method) {
+        return stream(component.getDeclaredMethods()).filter(method1 -> !method1.isAnnotationPresent(Inject.class))
+                .noneMatch(o -> isOverride(method, o));
     }
 
     private static boolean isOverride(Method method, Method o) {
