@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.stream;
 import static java.util.stream.Stream.concat;
 
-class ConstructorInjectionProvider<T> implements ComponentProvider<T> {
+class InjectionProvider<T> implements ComponentProvider<T> {
     private final Constructor<T> injectConstructor;
     private final List<Field> injectFields;
     private final List<Method> injectMethods;
 
-    public ConstructorInjectionProvider(Class<T> component) {
+    public InjectionProvider(Class<T> component) {
         if (Modifier.isAbstract(component.getModifiers())) {
             throw new IllegalComponentException();
         }
