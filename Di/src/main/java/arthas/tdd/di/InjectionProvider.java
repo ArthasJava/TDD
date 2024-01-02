@@ -4,6 +4,7 @@ import jakarta.inject.Inject;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -41,14 +42,12 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     @Override
     public T get(Context context) {
         try {
-            Object[] dependencies = stream(injectConstructor.getParameterTypes()).map(type -> context.get(type).get())
-                    .toArray();
-            T instance = injectConstructor.newInstance(dependencies);
+            T instance = injectConstructor.newInstance(toDependencies(context, injectConstructor));
             for (Field field : injectFields) {
-                field.set(instance, context.get(field.getType()).get());
+                field.set(instance, toDependency(context, field));
             }
             for (Method method : injectMethods) {
-                method.invoke(instance, stream(method.getParameterTypes()).map(m -> context.get(m).get()).toArray());
+                method.invoke(instance, toDependencies(context, method));
             }
             return instance;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
@@ -116,5 +115,13 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     private static boolean isOverride(Method method, Method o) {
         return o.getName().equals(method.getName()) && Arrays.equals(o.getParameterTypes(), method.getParameterTypes());
+    }
+
+    private static <T> Object[] toDependencies(Context context, Executable executable) {
+        return stream(executable.getParameterTypes()).map(type -> context.get(type).get()).toArray();
+    }
+
+    private static Object toDependency(Context context, Field field) {
+        return context.get(field.getType()).get();
     }
 }
