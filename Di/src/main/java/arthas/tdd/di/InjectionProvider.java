@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,10 +41,8 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     @Override
     public T get(Context context) {
         try {
-            Object[] dependencies = stream(injectConstructor.getParameters()).map(p -> {
-                Class<?> type = p.getType();
-                return context.get(type).get();
-            }).toArray();
+            Object[] dependencies = stream(injectConstructor.getParameterTypes()).map(type -> context.get(type).get())
+                    .toArray();
             T instance = injectConstructor.newInstance(dependencies);
             for (Field field : injectFields) {
                 field.set(instance, context.get(field.getType()).get());
@@ -61,8 +58,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     @Override
     public List<Class<?>> getDependencies() {
-        return concat(concat(stream(injectConstructor.getParameters()).map(Parameter::getType),
-                        injectFields.stream().map(Field::getType)),
+        return concat(concat(stream(injectConstructor.getParameterTypes()), injectFields.stream().map(Field::getType)),
                 injectMethods.stream().flatMap(method -> stream(method.getParameterTypes()))).toList();
     }
 
