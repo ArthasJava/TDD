@@ -67,13 +67,17 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         if (injectConstructors.size() > 1) {
             throw new IllegalComponentException();
         }
-        return (Constructor<Type>) injectConstructors.stream().findFirst().orElseGet(() -> {
-            try {
-                return implementation.getDeclaredConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new IllegalComponentException();
-            }
-        });
+        return (Constructor<Type>) injectConstructors.stream()
+                .findFirst()
+                .orElseGet(() -> defaultConstructor(implementation));
+    }
+
+    private static <Type> Constructor<Type> defaultConstructor(Class<Type> implementation) {
+        try {
+            return implementation.getDeclaredConstructor();
+        } catch (NoSuchMethodException e) {
+            throw new IllegalComponentException();
+        }
     }
 
     private static <T> List<Field> getInjectFields(Class<T> component) {
