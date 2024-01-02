@@ -97,12 +97,10 @@ class InjectionProvider<T> implements ComponentProvider<T> {
             methods.addAll(
                     injectable(current.getDeclaredMethods())
                             .filter(method -> methods.stream()
-                                    .noneMatch(o -> o.getName().equals(method.getName()) && Arrays.equals(
-                                            o.getParameterTypes(), method.getParameterTypes())))
+                                    .noneMatch(o -> isOverride(method, o)))
                             .filter(method -> stream(component.getDeclaredMethods()).filter(
                                             method1 -> !method1.isAnnotationPresent(Inject.class))
-                                    .noneMatch(o -> o.getName().equals(method.getName()) && Arrays.equals(
-                                            o.getParameterTypes(), method.getParameterTypes())))
+                                    .noneMatch(o -> isOverride(method, o)))
                             .toList());
             current = current.getSuperclass();
         }
@@ -112,5 +110,9 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     private static <T extends AnnotatedElement> Stream<T> injectable(T[] declaredFields) {
         return stream(declaredFields).filter(f -> f.isAnnotationPresent(Inject.class));
+    }
+
+    private static boolean isOverride(Method method, Method o) {
+        return o.getName().equals(method.getName()) && Arrays.equals(o.getParameterTypes(), method.getParameterTypes());
     }
 }
