@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -81,27 +82,17 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     private static <T> List<Field> getInjectFields(Class<T> component) {
-        List<Field> injectionFields = new ArrayList<>();
-        Class<? super T> current = component;
-        while (current != Object.class) {
-            injectionFields.addAll(injectable(current.getDeclaredFields()).toList());
-            current = current.getSuperclass();
-        }
-        return injectionFields;
+        return traverse(component, (current, fields) -> injectable(current.getDeclaredFields()).toList());
     }
 
     private static <T> List<Method> getInjectMethods(Class<T> component) {
-        List<Method> methods = new ArrayList<>();
-        Class<?> current = component;
-        while (current != Object.class) {
-            methods.addAll(
-                    injectable(current.getDeclaredMethods()).filter(method -> isOverrideByInjectMethod(method, methods))
-                            .filter(method -> isOverrideByNoInjectMethod(component, method))
-                            .toList());
-            current = current.getSuperclass();
-        }
-        Collections.reverse(methods);
-        return methods;
+        List<Method> injectMethods = traverse(component,
+                (current, methods) -> injectable(current.getDeclaredMethods()).filter(
+                                method -> isOverrideByInjectMethod(method, methods))
+                        .filter(method -> isOverrideByNoInjectMethod(component, method))
+                        .toList());
+        Collections.reverse(injectMethods);
+        return injectMethods;
     }
 
     private static <T extends AnnotatedElement> Stream<T> injectable(T[] declaredFields) {
@@ -127,5 +118,15 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     private static Object toDependency(Context context, Field field) {
         return context.get(field.getType()).get();
+    }
+
+    private static <T> List<T> traverse(Class<?> component, BiFunction<Class<?>, List<T>, List<T>> finder) {
+        List<T> members = new ArrayList<>();
+        Class<?> current = component;
+        while (current != Object.class) {
+            members.addAll(finder.apply(current, members));
+            current = current.getSuperclass();
+        }
+        return members;
     }
 }
