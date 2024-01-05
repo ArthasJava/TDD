@@ -1,10 +1,12 @@
 package arthas.tdd.di;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,11 +16,15 @@ import static org.mockito.Mockito.*;
 @Nested
 public class InjectionTest {
     private final Dependency dependency = mock(Dependency.class);
+    private Provider<Dependency> dependencyProvider = mock(Provider.class);
     private Context context = mock(Context.class);
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws NoSuchFieldException {
+        ParameterizedType providerType = (ParameterizedType) InjectionTest.class.getDeclaredField("dependencyProvider")
+                .getGenericType();
         when(context.get(eq(Dependency.class))).thenReturn(Optional.of(dependency));
+        when(context.get(eq(providerType))).thenReturn(Optional.of(dependencyProvider));
     }
 
     @Nested
@@ -29,8 +35,7 @@ public class InjectionTest {
 
             @Test
             void should_call_default_constructor_if_no_inject_constructor() {
-                DefaultConstructor component = new InjectionProvider<>(DefaultConstructor.class).get(
-                        context);
+                DefaultConstructor component = new InjectionProvider<>(DefaultConstructor.class).get(context);
 
                 assertNotNull(component);
             }
@@ -53,13 +58,25 @@ public class InjectionTest {
 
             @Test
             void should_include_dependencies_from_inject_constructor() {
-                InjectionProvider<InjectConstructor> provider = new InjectionProvider<>(
-                        InjectConstructor.class);
+                InjectionProvider<InjectConstructor> provider = new InjectionProvider<>(InjectConstructor.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
             }
 
-            // TODO support inject constructor
+            static class ProviderInjectConstructor {
+                Provider<Dependency> dependency;
 
+                @Inject
+                public ProviderInjectConstructor(Provider<Dependency> dependency) {
+                    this.dependency = dependency;
+                }
+            }
+
+            @Test
+            void should_inject_provider_via_inject_constructor() {
+                ProviderInjectConstructor instance = new InjectionProvider<>(ProviderInjectConstructor.class).get(
+                        context);
+                assertSame(dependencyProvider, instance.dependency);
+            }
         }
 
         @Nested
@@ -68,14 +85,12 @@ public class InjectionTest {
 
             @Test
             void should_throw_exception_if_component_is_abstract() {
-                assertThrows(IllegalComponentException.class,
-                        () -> new InjectionProvider<>(AbstractComponent.class));
+                assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(AbstractComponent.class));
             }
 
             @Test
             void should_throw_exception_if_component_is_interface() {
-                assertThrows(IllegalComponentException.class,
-                        () -> new InjectionProvider<>(Component.class));
+                assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(Component.class));
             }
 
             static class MultiInjectConstructors {
@@ -120,8 +135,8 @@ public class InjectionTest {
 
             @Test
             void should_inject_dependency_via_field() {
-                ComponentWithFieldInjection component = new InjectionProvider<>(
-                        ComponentWithFieldInjection.class).get(context);
+                ComponentWithFieldInjection component = new InjectionProvider<>(ComponentWithFieldInjection.class).get(
+                        context);
                 assertSame(dependency, component.dependency);
             }
 
@@ -134,12 +149,22 @@ public class InjectionTest {
 
             @Test
             void should_inject_dependency_via_superclass_field_injection() {
-                SubclassWithFieldInjection component = new InjectionProvider<>(
-                        SubclassWithFieldInjection.class).get(context);
+                SubclassWithFieldInjection component = new InjectionProvider<>(SubclassWithFieldInjection.class).get(
+                        context);
 
                 assertSame(dependency, component.dependency);
             }
-            // TODO support inject field
+
+            static class ProviderInjectField {
+                @Inject
+                Provider<Dependency> dependency;
+            }
+
+            @Test
+            void should_inject_provider_via_inject_field() {
+                ProviderInjectField instance = new InjectionProvider<>(ProviderInjectField.class).get(context);
+                assertSame(dependencyProvider, instance.dependency);
+            }
         }
 
         @Nested
@@ -151,8 +176,7 @@ public class InjectionTest {
 
             @Test
             void should_throw_exception_if_field_is_final() {
-                assertThrows(IllegalComponentException.class,
-                        () -> new InjectionProvider<>(FinalInjectField.class));
+                assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(FinalInjectField.class));
             }
         }
     }
@@ -189,8 +213,8 @@ public class InjectionTest {
 
             @Test
             void should_inject_dependency_via_inject_method() {
-                InjectMethodWithDependency component = new InjectionProvider<>(
-                        InjectMethodWithDependency.class).get(context);
+                InjectMethodWithDependency component = new InjectionProvider<>(InjectMethodWithDependency.class).get(
+                        context);
 
                 assertEquals(dependency, component.dependency);
             }
@@ -222,8 +246,8 @@ public class InjectionTest {
 
             @Test
             void should_inject_dependencies_via_inject_method_from_superclass() {
-                SubClassWithInjectMethod component = new InjectionProvider<>(
-                        SubClassWithInjectMethod.class).get(context);
+                SubClassWithInjectMethod component = new InjectionProvider<>(SubClassWithInjectMethod.class).get(
+                        context);
 
                 assertEquals(1, component.superCalled);
                 assertEquals(2, component.subCalled);
@@ -258,7 +282,20 @@ public class InjectionTest {
                 assertEquals(0, component.superCalled);
             }
 
-            // TODO support inject method
+            static class ProviderInjectMethod {
+                Provider<Dependency> dependency;
+
+                @Inject
+                void install(Provider<Dependency> dependency) {
+                    this.dependency = dependency;
+                }
+            }
+
+            @Test
+            void should_inject_provider_via_inject_method() {
+                ProviderInjectMethod instance = new InjectionProvider<>(ProviderInjectMethod.class).get(context);
+                assertSame(dependencyProvider, instance.dependency);
+            }
         }
 
         @Nested
