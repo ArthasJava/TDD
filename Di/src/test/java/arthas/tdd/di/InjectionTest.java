@@ -62,6 +62,8 @@ public class InjectionTest {
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
             }
 
+            // TODO include dependency type from inject constructor
+
             static class ProviderInjectConstructor {
                 Provider<Dependency> dependency;
 
@@ -147,6 +149,8 @@ public class InjectionTest {
                 assertEquals(List.of(Dependency.class), provider.getDependencies());
             }
 
+            // TODO include dependency type from inject field
+
             @Test
             void should_inject_dependency_via_superclass_field_injection() {
                 SubclassWithFieldInjection component = new InjectionProvider<>(SubclassWithFieldInjection.class).get(
@@ -225,6 +229,8 @@ public class InjectionTest {
                         InjectMethodWithDependency.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
             }
+
+            // TODO include dependency type from inject method
 
             static class SuperClassWithInjectMethod {
                 int superCalled = 0;

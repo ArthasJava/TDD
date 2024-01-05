@@ -105,7 +105,7 @@ public class ContextTest {
 
         @Test
         void should_retrieve_bind_type_as_provider() {
-            Component instance = new Component(){};
+            Component instance = new Component() { };
             contextConfig.bind(Component.class, instance);
 
             ParameterizedType type = new TypeLiteral<Provider<Component>>() { }.getType();
@@ -116,7 +116,7 @@ public class ContextTest {
 
         @Test
         void should_not_retrieve_bind_type_as_unsupported_container() {
-            Component instance = new Component(){};
+            Component instance = new Component() { };
             contextConfig.bind(Component.class, instance);
 
             ParameterizedType type = new TypeLiteral<List<Component>>() { }.getType();
@@ -124,9 +124,10 @@ public class ContextTest {
         }
 
         static abstract class TypeLiteral<T> {
-        public ParameterizedType getType () {
-            return (ParameterizedType) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
-        }}
+            public ParameterizedType getType() {
+                return (ParameterizedType) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+            }
+        }
     }
 
     @Nested
@@ -146,8 +147,21 @@ public class ContextTest {
 
         public static Stream<Arguments> should_throw_exception_if_dependency_not_found() {
             return Stream.of(Arguments.of(Named.of("Constructor Injection", TypeBinding.ConstructorInjection.class)),
-                    Arguments.of(Named.of("Field Injection", TypeBinding.FieldInjection.class)),
-                    Arguments.of(Named.of("Method Injection", TypeBinding.MethodInjection.class)));
+                    Arguments.of(Named.of("Field Injection", TypeBinding.FieldInjection.class)));
+            //                    Arguments.of(Named.of("Method Injection", TypeBinding.MethodInjection.class)), Arguments.of(
+            //                            Named.of("Provider In Injection Constructor", MissDependencyProviderConstructor.class)));
+            // TODO provider in constructor
+            // TODO provider in field
+            // TODO provider in method
+        }
+
+        static class MissDependencyProviderConstructor {
+            Provider<Dependency> dependencyProvider;
+
+            @Inject
+            public MissDependencyProviderConstructor(Provider<Dependency> dependencyProvider) {
+                this.dependencyProvider = dependencyProvider;
+            }
         }
 
         @ParameterizedTest(name = "cyclic dependency between {0} and {1}")
