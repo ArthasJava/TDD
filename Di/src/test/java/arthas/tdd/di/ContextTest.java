@@ -312,5 +312,19 @@ public class ContextTest {
             return arguments.stream();
         }
 
+        static class CyclicDependencyProviderConstructor implements Dependency {
+            @Inject
+            public CyclicDependencyProviderConstructor(Provider<Component> component) {
+            }
+        }
+
+        @Test
+        void should_not_throw_exception_if_cyclic_dependency_via_provider() {
+            contextConfig.bind(Component.class, CyclicComponentInjectConstructor.class);
+            contextConfig.bind(Dependency.class, CyclicDependencyProviderConstructor.class);
+
+            Context context = contextConfig.getContext();
+            assertTrue(context.get(Component.class).isPresent());
+        }
     }
 }
