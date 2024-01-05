@@ -1,6 +1,7 @@
 package arthas.tdd.di;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
@@ -9,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -101,6 +103,30 @@ public class ContextTest {
             }
         }
 
+        @Test
+        void should_retrieve_bind_type_as_provider() {
+            Component instance = new Component(){};
+            contextConfig.bind(Component.class, instance);
+
+            ParameterizedType type = new TypeLiteral<Provider<Component>>() { }.getType();
+            Provider<Component> provider = (Provider<Component>) contextConfig.getContext().get(type).get();
+
+            assertSame(provider.get(), instance);
+        }
+
+        @Test
+        void should_not_retrieve_bind_type_as_unsupported_container() {
+            Component instance = new Component(){};
+            contextConfig.bind(Component.class, instance);
+
+            ParameterizedType type = new TypeLiteral<List<Component>>() { }.getType();
+            assertFalse(contextConfig.getContext().get(type).isPresent());
+        }
+
+        static abstract class TypeLiteral<T> {
+        public ParameterizedType getType () {
+            return (ParameterizedType) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        }}
     }
 
     @Nested

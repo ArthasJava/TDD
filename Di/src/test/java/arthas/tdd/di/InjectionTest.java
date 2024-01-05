@@ -57,6 +57,9 @@ public class InjectionTest {
                         InjectConstructor.class);
                 assertArrayEquals(new Class<?>[]{Dependency.class}, provider.getDependencies().toArray());
             }
+
+            // TODO support inject constructor
+
         }
 
         @Nested
@@ -136,6 +139,7 @@ public class InjectionTest {
 
                 assertSame(dependency, component.dependency);
             }
+            // TODO support inject field
         }
 
         @Nested
@@ -253,6 +257,8 @@ public class InjectionTest {
 
                 assertEquals(0, component.superCalled);
             }
+
+            // TODO support inject method
         }
 
         @Nested

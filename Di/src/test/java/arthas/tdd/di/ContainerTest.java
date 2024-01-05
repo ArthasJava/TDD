@@ -7,12 +7,7 @@ public class ContainerTest {
     public class DependenciesSelection {
         @Nested
         public class ProviderType {
-            // Context
-            // TODO cloud get Provider<T> from context
-            // InjectionProvider
-            // TODO support inject constructor
-            // TODO support inject field
-            // TODO support inject method
+
         }
 
         @Nested

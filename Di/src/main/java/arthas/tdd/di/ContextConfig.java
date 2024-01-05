@@ -1,5 +1,8 @@
 package arthas.tdd.di;
 
+import jakarta.inject.Provider;
+
+import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -24,6 +27,16 @@ public class ContextConfig {
             public <Type> Optional<Type> get(Class<Type> type) {
                 return Optional.ofNullable(providers.get(type))
                         .map(componentProvider -> (Type) componentProvider.get(this));
+            }
+
+            @Override
+            public Optional get(ParameterizedType type) {
+                if (type.getRawType() != Provider.class) {
+                    return Optional.empty();
+                }
+                Class<?> componentType = (Class<?>) type.getActualTypeArguments()[0];
+                return Optional.ofNullable(providers.get(componentType))
+                        .map(componentProvider -> (Provider<Object>) ()-> componentProvider.get(this));
             }
         };
     }
