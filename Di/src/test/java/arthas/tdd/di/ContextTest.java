@@ -147,20 +147,27 @@ public class ContextTest {
 
         public static Stream<Arguments> should_throw_exception_if_dependency_not_found() {
             return Stream.of(Arguments.of(Named.of("Constructor Injection", TypeBinding.ConstructorInjection.class)),
-                    Arguments.of(Named.of("Field Injection", TypeBinding.FieldInjection.class)));
-            //                    Arguments.of(Named.of("Method Injection", TypeBinding.MethodInjection.class)), Arguments.of(
-            //                            Named.of("Provider In Injection Constructor", MissDependencyProviderConstructor.class)));
-            // TODO provider in constructor
-            // TODO provider in field
-            // TODO provider in method
+                    Arguments.of(Named.of("Field Injection", TypeBinding.FieldInjection.class)),
+                    Arguments.of(Named.of("Method Injection", TypeBinding.MethodInjection.class)), Arguments.of(
+                            Named.of("Provider In Injection Constructor", MissDependencyProviderConstructor.class)),
+                    Arguments.of(Named.of("Provider In Injection Field", MissDependencyProviderField.class)),
+                    Arguments.of(Named.of("Provider In Injection Method", MissDependencyProviderMethod.class)));
         }
 
         static class MissDependencyProviderConstructor {
-            Provider<Dependency> dependencyProvider;
-
             @Inject
             public MissDependencyProviderConstructor(Provider<Dependency> dependencyProvider) {
-                this.dependencyProvider = dependencyProvider;
+            }
+        }
+
+        static class MissDependencyProviderField {
+            @Inject
+            Provider<Dependency> dependencyProvider;
+        }
+
+        static class MissDependencyProviderMethod {
+            @Inject
+            public void install(Provider<Dependency> dependencyProvider) {
             }
         }
 

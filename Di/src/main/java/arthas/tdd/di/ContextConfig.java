@@ -3,6 +3,7 @@ package arthas.tdd.di;
 import jakarta.inject.Provider;
 
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,16 +43,28 @@ public class ContextConfig {
     }
 
     private void checkDependencies(Class<?> component, Stack<Class<?>> visiting) {
-        for (Class<?> dependency : providers.get(component).getDependencies()) {
-            if (visiting.contains(dependency)) {
-                throw new CyclicDependenciesException(visiting);
+        for (Type dependency : providers.get(component).getDependencyTypes()) {
+            if (dependency instanceof Class<?>) {
+                checkDependency(component, visiting, (Class<?>) dependency);
             }
-            visiting.push(dependency);
-            if (!providers.containsKey(dependency)) {
-                throw new DependencyNotFoundException(component, dependency);
+            if (dependency instanceof ParameterizedType) {
+                Class<?> type = (Class<?>) ((ParameterizedType) dependency).getActualTypeArguments()[0];
+                if (!providers.containsKey(type)) {
+                    throw new DependencyNotFoundException(component, type);
+                }
             }
-            checkDependencies(dependency, visiting);
-            visiting.pop();
         }
+    }
+
+    private void checkDependency(Class<?> component, Stack<Class<?>> visiting, Class<?> dependency) {
+        if (visiting.contains(dependency)) {
+            throw new CyclicDependenciesException(visiting);
+        }
+        visiting.push(dependency);
+        if (!providers.containsKey(dependency)) {
+            throw new DependencyNotFoundException(component, dependency);
+        }
+        checkDependencies(dependency, visiting);
+        visiting.pop();
     }
 }
