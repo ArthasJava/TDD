@@ -60,7 +60,7 @@ public class InjectionTest {
             void should_include_dependencies_from_inject_constructor() {
                 InjectionProvider<InjectConstructor> provider = new InjectionProvider<>(InjectConstructor.class);
                 assertArrayEquals(new Context.Ref[]{Context.Ref.of(Dependency.class)},
-                        provider.getDependencyRefs().toArray());
+                        provider.getDependencies().toArray());
             }
 
             @Test
@@ -68,7 +68,7 @@ public class InjectionTest {
                 InjectionProvider<ProviderInjectConstructor> provider = new InjectionProvider<>(
                         ProviderInjectConstructor.class);
                 assertArrayEquals(new Context.Ref[]{Context.Ref.of(providerType)},
-                        provider.getDependencyRefs().toArray());
+                        provider.getDependencies().toArray());
             }
 
             static class ProviderInjectConstructor {
@@ -154,14 +154,14 @@ public class InjectionTest {
                 InjectionProvider<ComponentWithFieldInjection> provider = new InjectionProvider<>(
                         ComponentWithFieldInjection.class);
                 assertArrayEquals(new Context.Ref[]{Context.Ref.of(Dependency.class)},
-                        provider.getDependencyRefs().toArray());
+                        provider.getDependencies().toArray());
             }
 
             @Test
             void should_include_dependency_types_from_inject_field() {
                 InjectionProvider<ProviderInjectField> provider = new InjectionProvider<>(ProviderInjectField.class);
                 assertArrayEquals(new Context.Ref[]{Context.Ref.of(providerType)},
-                        provider.getDependencyRefs().toArray());
+                        provider.getDependencies().toArray());
             }
 
             @Test
@@ -241,14 +241,14 @@ public class InjectionTest {
                 InjectionProvider<InjectMethodWithDependency> provider = new InjectionProvider<>(
                         InjectMethodWithDependency.class);
                 assertArrayEquals(new Context.Ref[]{Context.Ref.of(Dependency.class)},
-                        provider.getDependencyRefs().toArray());
+                        provider.getDependencies().toArray());
             }
 
             @Test
             void should_include_dependency_types_from_inject_field() {
                 InjectionProvider<ProviderInjectMethod> provider = new InjectionProvider<>(ProviderInjectMethod.class);
                 assertArrayEquals(new Context.Ref[]{Context.Ref.of(providerType)},
-                        provider.getDependencyRefs().toArray());
+                        provider.getDependencies().toArray());
             }
 
             static class SuperClassWithInjectMethod {
