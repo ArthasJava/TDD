@@ -2,7 +2,6 @@ package arthas.tdd.di;
 
 import jakarta.inject.Provider;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,39 +37,6 @@ public class ContextConfig {
                         .map(componentProvider ->  componentProvider.get(this));
             }
         };
-    }
-
-    static class Ref {
-        private Type containerType;
-        private Class<?> componentType;
-
-        public Ref(Class<?> componentType) {
-            this.componentType = componentType;
-        }
-
-        public Ref(ParameterizedType containerType) {
-            this.containerType = containerType.getRawType();
-            this.componentType = (Class<?>) containerType.getActualTypeArguments()[0];
-        }
-
-        static Ref of(Type type) {
-            if (type instanceof ParameterizedType container) {
-                return new Ref(container);
-            }
-            return new Ref((Class<?>) type);
-        }
-
-        public boolean isContainer() {
-            return containerType != null;
-        }
-
-        public Type getContainerType() {
-            return containerType;
-        }
-
-        public Class<?> getComponentType() {
-            return componentType;
-        }
     }
 
     private void checkDependencies(Class<?> component, Stack<Class<?>> visiting) {
