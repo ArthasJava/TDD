@@ -25,7 +25,11 @@ public class ContextConfig {
         return new Context() {
             @Override
             public Optional get(Type type) {
-                Ref ref = Ref.of(type);
+                return get(Ref.of(type));
+            }
+
+            @Override
+            public Optional<?> get(Ref ref) {
                 if (ref.isContainer()) {
                     if (ref.getContainerType() != Provider.class) {
                         return Optional.empty();
@@ -34,7 +38,7 @@ public class ContextConfig {
                             .map(componentProvider -> (Provider<Object>) () -> componentProvider.get(this));
                 }
                 return Optional.ofNullable(providers.get(ref.getComponentType()))
-                        .map(componentProvider ->  componentProvider.get(this));
+                        .map(componentProvider -> componentProvider.get(this));
             }
         };
     }
