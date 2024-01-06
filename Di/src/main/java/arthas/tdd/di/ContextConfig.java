@@ -26,23 +26,15 @@ public class ContextConfig {
         return new Context() {
             @Override
             public Optional get(Type type) {
-                if (insContainerType(type)) {
-                    return getContainer((ParameterizedType) type);
-                }
-                return getComponent((Class<?>) type);
-            }
-
-            private Optional getContainer(ParameterizedType type) {
                 Ref ref = Ref.of(type);
-                if (ref.getContainerType() != Provider.class) {
-                    return Optional.empty();
+                if (insContainerType(type)) {
+                    if (ref.getContainerType() != Provider.class) {
+                        return Optional.empty();
+                    }
+                    return Optional.ofNullable(providers.get(ref.getComponentType()))
+                            .map(componentProvider -> (Provider<Object>) () -> componentProvider.get(this));
                 }
                 return Optional.ofNullable(providers.get(ref.getComponentType()))
-                        .map(componentProvider -> (Provider<Object>) () -> componentProvider.get(this));
-            }
-
-            private Optional getComponent(Class type) {
-                return Optional.ofNullable(providers.get(Ref.of(type).getComponentType()))
                         .map(componentProvider ->  componentProvider.get(this));
             }
         };
