@@ -125,7 +125,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     private static Object toDependency(Context context, Type type) {
-        return context.get(type).get();
+        return context.get(Context.Ref.of(type)).get();
     }
 
     private static <T> List<T> traverse(Class<?> component, BiFunction<Class<?>, List<T>, List<T>> finder) {

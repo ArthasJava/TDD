@@ -2,13 +2,10 @@ package arthas.tdd.di;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import java.util.Optional;
 
 public interface Context {
-    default Optional get(Type type) {
-        return get(Ref.of(type));
-    };
-
     Optional get(Ref ref);
 
     class Ref {
@@ -41,6 +38,23 @@ public interface Context {
 
         public Class<?> getComponentType() {
             return componentType;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            Ref ref = (Ref) o;
+            return Objects.equals(containerType, ref.containerType) && Objects.equals(componentType, ref.componentType);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(containerType, componentType);
         }
     }
 }

@@ -32,7 +32,8 @@ public class ContextTest {
         // TODO instance
         @Test
         void should_return_empty_if_component_not_defined() {
-            Optional<Component> component = contextConfig.getContext().get(Component.class);
+            Context context = contextConfig.getContext();
+            Optional<Component> component = context.get(Context.Ref.of(Component.class));
             assertFalse(component.isPresent());
         }
 
@@ -42,7 +43,7 @@ public class ContextTest {
             contextConfig.bind(Component.class, instance);
 
             Context context = contextConfig.getContext();
-            Optional<Component> component = context.get(Component.class);
+            Optional<Component> component = context.get(Context.Ref.of(Component.class));
             assertTrue(component.isPresent());
             assertSame(instance, component.get());
         }
@@ -54,7 +55,8 @@ public class ContextTest {
             contextConfig.bind(Dependency.class, dependency);
             contextConfig.bind(Component.class, componentType);
 
-            Optional<? extends Component> component = contextConfig.getContext().get(Component.class);
+            Context context = contextConfig.getContext();
+            Optional<? extends Component> component = context.get(Context.Ref.of(Component.class));
             assertTrue(component.isPresent());
             assertSame(dependency, component.get().dependency());
         }
@@ -109,7 +111,8 @@ public class ContextTest {
             contextConfig.bind(Component.class, instance);
 
             ParameterizedType type = new TypeLiteral<Provider<Component>>() { }.getType();
-            Provider<Component> provider = (Provider<Component>) contextConfig.getContext().get(type).get();
+            Context context = contextConfig.getContext();
+            Provider<Component> provider = (Provider<Component>) context.get(Context.Ref.of(type)).get();
 
             assertSame(provider.get(), instance);
         }
@@ -120,7 +123,8 @@ public class ContextTest {
             contextConfig.bind(Component.class, instance);
 
             ParameterizedType type = new TypeLiteral<List<Component>>() { }.getType();
-            assertFalse(contextConfig.getContext().get(type).isPresent());
+            Context context = contextConfig.getContext();
+            assertFalse(context.get(Context.Ref.of(type)).isPresent());
         }
 
         static abstract class TypeLiteral<T> {
@@ -324,7 +328,7 @@ public class ContextTest {
             contextConfig.bind(Dependency.class, CyclicDependencyProviderConstructor.class);
 
             Context context = contextConfig.getContext();
-            assertTrue(context.get(Component.class).isPresent());
+            assertTrue(context.get(Context.Ref.of(Component.class)).isPresent());
         }
     }
 }
