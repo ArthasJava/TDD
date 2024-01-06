@@ -65,6 +65,11 @@ class InjectionProvider<T> implements ComponentProvider<T> {
                 .flatMap(m -> stream(m.getParameters()).map(Parameter::getParameterizedType))).toList();
     }
 
+    @Override
+    public List<Context.Ref> getDependencyRefs() {
+        return getDependencies().stream().map(Context.Ref::of).collect(Collectors.toList());
+    }
+
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
         List<Constructor<?>> injectConstructors = injectable(implementation.getConstructors()).collect(
                 Collectors.toList());
