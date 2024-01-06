@@ -6,19 +6,23 @@ import java.util.Objects;
 import java.util.Optional;
 
 public interface Context {
-    Optional get(Ref ref);
+    <ComponentType> Optional<ComponentType> get(Ref<ComponentType> ref);
 
-    class Ref {
+    class Ref<ComponentType> {
         private Type containerType;
         private Class<?> componentType;
 
-        public Ref(Class<?> componentType) {
+        public Ref(Class<ComponentType> componentType) {
             this.componentType = componentType;
         }
 
         public Ref(ParameterizedType containerType) {
             this.containerType = containerType.getRawType();
             this.componentType = (Class<?>) containerType.getActualTypeArguments()[0];
+        }
+
+        static <ComponentType> Ref<ComponentType> of (Class<ComponentType> component) {
+            return new Ref<>(component);
         }
 
         static Ref of(Type type) {
