@@ -9,10 +9,5 @@ public interface Context {
 
     Optional get(ParameterizedType type);
 
-    default Optional getType(Type type) {
-        if (type instanceof ParameterizedType) {
-            return this.get((ParameterizedType) type);
-        }
-        return this.get((Class<?>) type);
-    }
+    Optional getType(Type type);
 }

@@ -39,6 +39,13 @@ public class ContextConfig {
                 return Optional.ofNullable(providers.get(componentType))
                         .map(componentProvider -> (Provider<Object>) ()-> componentProvider.get(this));
             }
+
+            @Override
+            public Optional getType(Type type) {
+                if (type instanceof ParameterizedType) {
+                    return this.get((ParameterizedType) type);
+                }
+                return this.get((Class<?>) type);            }
         };
     }
 
