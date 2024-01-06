@@ -33,19 +33,51 @@ public class ContextConfig {
             }
 
             private Optional getContainer(ParameterizedType type) {
-                if (type.getRawType() != Provider.class) {
+                Type containerType = type.getRawType();
+                Class<?> componentType = getComponentType(type);
+                if (containerType != Provider.class) {
                     return Optional.empty();
                 }
-                Class<?> componentType = getComponentType(type);
                 return Optional.ofNullable(providers.get(componentType))
                         .map(componentProvider -> (Provider<Object>) () -> componentProvider.get(this));
             }
 
-            private <Type> Optional<Type> getComponent(Class<Type> type) {
-                return Optional.ofNullable(providers.get(type))
-                        .map(componentProvider -> (Type) componentProvider.get(this));
+            private Optional getComponent(Class type) {
+                Type containerType = null;
+                Class<Type> componentType = type;
+                return Optional.ofNullable(providers.get(componentType))
+                        .map(componentProvider ->  componentProvider.get(this));
             }
         };
+    }
+
+    static class Ref {
+        private Type containerType;
+        private Class<?> componentType;
+
+        public Ref(Class<?> componentType) {
+            this.componentType = componentType;
+        }
+
+        public Ref(ParameterizedType containerType) {
+            this.containerType = containerType.getRawType();
+            this.componentType = (Class<?>) containerType.getActualTypeArguments()[0];
+        }
+
+        static Ref of(Type type) {
+            if (type instanceof ParameterizedType) {
+                return new Ref((ParameterizedType) type);
+            }
+            return new Ref((Class<?>) type);
+        }
+
+        public Type getContainerType() {
+            return containerType;
+        }
+
+        public Class<?> getComponentType() {
+            return componentType;
+        }
     }
 
     private static Class<?> getComponentType(Type type) {
@@ -67,21 +99,22 @@ public class ContextConfig {
     }
 
     private void checkContainerTypeDependency(Class<?> component, Type dependency) {
-        Class<?> type = getComponentType(dependency);
-        if (!providers.containsKey(type)) {
-            throw new DependencyNotFoundException(component, type);
+        Class<?> componentType = getComponentType(dependency);
+        if (!providers.containsKey(componentType)) {
+            throw new DependencyNotFoundException(component, componentType);
         }
     }
 
     private void checkComponentTypeDependency(Class<?> component, Stack<Class<?>> visiting, Class<?> dependency) {
-        if (visiting.contains(dependency)) {
+        Class<?> componentType = dependency;
+        if (visiting.contains(componentType)) {
             throw new CyclicDependenciesException(visiting);
         }
-        visiting.push(dependency);
-        if (!providers.containsKey(dependency)) {
-            throw new DependencyNotFoundException(component, dependency);
+        visiting.push(componentType);
+        if (!providers.containsKey(componentType)) {
+            throw new DependencyNotFoundException(component, componentType);
         }
-        checkDependencies(dependency, visiting);
+        checkDependencies(componentType, visiting);
         visiting.pop();
     }
 }
