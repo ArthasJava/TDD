@@ -27,7 +27,7 @@ public class ContextConfig {
             @Override
             public Optional get(Type type) {
                 Ref ref = Ref.of(type);
-                if (insContainerType(type)) {
+                if (ref.isContainer()) {
                     if (ref.getContainerType() != Provider.class) {
                         return Optional.empty();
                     }
@@ -58,6 +58,10 @@ public class ContextConfig {
                 return new Ref(container);
             }
             return new Ref((Class<?>) type);
+        }
+
+        public boolean isContainer() {
+            return containerType != null;
         }
 
         public Type getContainerType() {
