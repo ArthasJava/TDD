@@ -12,24 +12,34 @@ public interface Context {
         private Type containerType;
         private Class<?> componentType;
 
-        public Ref(Class<ComponentType> componentType) {
-            this.componentType = componentType;
-        }
-
-        public Ref(ParameterizedType containerType) {
-            this.containerType = containerType.getRawType();
-            this.componentType = (Class<?>) containerType.getActualTypeArguments()[0];
-        }
-
-        static <ComponentType> Ref<ComponentType> of (Class<ComponentType> component) {
+        public static <ComponentType> Ref<ComponentType> of(Class<ComponentType> component) {
             return new Ref<>(component);
         }
 
-        static Ref of(Type type) {
+        public static Ref of(Type type) {
+            return new Ref(type);
+        }
+
+        public Ref(Class<ComponentType> componentType) {
+            init(componentType);
+        }
+
+        public Ref(Type type) {
+            init(type);
+        }
+
+        protected Ref() {
+            Type type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+            init(type);
+        }
+
+        private void init(Type type) {
             if (type instanceof ParameterizedType container) {
-                return new Ref(container);
+                this.containerType = container.getRawType();
+                this.componentType = (Class<?>) container.getActualTypeArguments()[0];
+            } else {
+                this.componentType = (Class<?>) type;
             }
-            return new Ref((Class<?>) type);
         }
 
         public boolean isContainer() {
