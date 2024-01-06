@@ -73,41 +73,20 @@ public class ContextConfig {
         }
     }
 
-    private static Class<?> getComponentType(Type type) {
-        return (Class<?>) ((ParameterizedType) type).getActualTypeArguments()[0];
-    }
-
-    private static boolean insContainerType(Type type) {
-        return type instanceof ParameterizedType;
-    }
-
     private void checkDependencies(Class<?> component, Stack<Class<?>> visiting) {
         for (Type dependency : providers.get(component).getDependencies()) {
-            if (insContainerType(dependency)) {
-                checkContainerTypeDependency(component, dependency);
-            } else {
-                checkComponentTypeDependency(component, visiting, (Class<?>) dependency);
+            Ref ref = Ref.of(dependency);
+            if (!providers.containsKey(ref.getComponentType())) {
+                throw new DependencyNotFoundException(component, ref.getComponentType());
+            }
+            if (!ref.isContainer()) {
+                if (visiting.contains(ref.getComponentType())) {
+                    throw new CyclicDependenciesException(visiting);
+                }
+                visiting.push(ref.getComponentType());
+                checkDependencies(ref.getComponentType(), visiting);
+                visiting.pop();
             }
         }
-    }
-
-    private void checkContainerTypeDependency(Class<?> component, Type dependency) {
-        Ref ref = Ref.of(dependency);
-        if (!providers.containsKey(ref.getComponentType())) {
-            throw new DependencyNotFoundException(component, ref.getComponentType());
-        }
-    }
-
-    private void checkComponentTypeDependency(Class<?> component, Stack<Class<?>> visiting, Class<?> dependency) {
-        Ref ref = Ref.of(dependency);
-        if (visiting.contains(ref.getComponentType())) {
-            throw new CyclicDependenciesException(visiting);
-        }
-        visiting.push(ref.getComponentType());
-        if (!providers.containsKey(ref.getComponentType())) {
-            throw new DependencyNotFoundException(component, ref.getComponentType());
-        }
-        checkDependencies(ref.getComponentType(), visiting);
-        visiting.pop();
     }
 }
