@@ -53,13 +53,12 @@ public class ContextConfig {
     }
 
     private <ComponentType> ComponentProvider<?> getProvider(ComponentRef<ComponentType> ref) {
-        return components.get(new Component(ref.getComponentType(), ref.getQualifier()));
+        return components.get(ref.component());
     }
 
     private void checkDependencies(Component component, Stack<Class<?>> visiting) {
         for (ComponentRef dependency : components.get(component).getDependencies()) {
-            Component dependencyComponent = new Component(dependency.getComponentType(), dependency.getQualifier());
-            if (!components.containsKey(dependencyComponent)) {
+            if (!components.containsKey(dependency.component())) {
                 throw new DependencyNotFoundException(component.type(), dependency.getComponentType());
             }
             if (!dependency.isContainer()) {
@@ -67,7 +66,7 @@ public class ContextConfig {
                     throw new CyclicDependenciesException(visiting);
                 }
                 visiting.push(dependency.getComponentType());
-                checkDependencies(dependencyComponent, visiting);
+                checkDependencies(dependency.component(), visiting);
                 visiting.pop();
             }
         }
