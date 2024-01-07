@@ -196,8 +196,8 @@ public class ContextTest {
             DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
                     () -> contextConfig.getContext());
 
-            assertEquals(Dependency.class, exception.getDependency());
-            assertEquals(TestComponent.class, exception.getComponent());
+            assertEquals(Dependency.class, exception.getDependency().type());
+            assertEquals(TestComponent.class, exception.getComponent().type());
         }
 
         public static Stream<Arguments> should_throw_exception_if_dependency_not_found() {
@@ -394,9 +394,9 @@ public class ContextTest {
                 DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
                         () -> contextConfig.getContext());
                 assertEquals(new Component(InjectionConstructor.class, new NamedLiteral("Owner")),
-                        exception.getComponentComponent());
+                        exception.getComponent());
                 assertEquals(new Component(Dependency.class, new SkywalkerLiteral()),
-                        exception.getDependencyComponent());
+                        exception.getDependency());
             }
 
             static class InjectionConstructor {
