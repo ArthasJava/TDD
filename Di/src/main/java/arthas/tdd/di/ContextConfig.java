@@ -1,6 +1,7 @@
 package arthas.tdd.di;
 
 import jakarta.inject.Provider;
+import jakarta.inject.Qualifier;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -17,6 +18,10 @@ public class ContextConfig {
     }
 
     public <Type> void bind(Class<Type> type, Type instance, Annotation... qualifiers) {
+        if (Arrays.stream(qualifiers)
+                .anyMatch(qualifier -> !qualifier.annotationType().isAnnotationPresent(Qualifier.class))) {
+            throw new IllegalComponentException();
+        }
         Arrays.stream(qualifiers)
                 .forEach(qualifier -> components.put(new Component(type, qualifier),
                         (ComponentProvider<Type>) context -> instance));
@@ -28,6 +33,10 @@ public class ContextConfig {
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation,
             Annotation... qualifiers) {
+        if (Arrays.stream(qualifiers)
+                .anyMatch(qualifier -> !qualifier.annotationType().isAnnotationPresent(Qualifier.class))) {
+            throw new IllegalComponentException();
+        }
         Arrays.stream(qualifiers)
                 .forEach(qualifier -> components.put(new Component(type, qualifier),
                         new InjectionProvider<>(implementation)));

@@ -167,7 +167,18 @@ public class ContextTest {
                 assertSame(dependency, skywalker.dependency());
             }
 
-            // TODO throw illegal component if illegal qualifier
+            @Test
+            void should_throw_exception_if_illegal_qualifier_given_to_instance() {
+                TestComponent instance = new TestComponent() { };
+                assertThrows(IllegalComponentException.class,
+                        () -> contextConfig.bind(TestComponent.class, instance, new TestLiteral()));
+            }
+
+            @Test
+            void should_throw_exception_if_illegal_qualifier_given_to_component() {
+                assertThrows(IllegalComponentException.class,
+                        () -> contextConfig.bind(TestComponent.class, ConstructorInjection.class, new TestLiteral()));
+            }
         }
     }
 
@@ -396,3 +407,9 @@ record SkywalkerLiteral() implements Skywalker {
     }
 }
 
+record TestLiteral() implements Test {
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return Test.class;
+    }
+}
