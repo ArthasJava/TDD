@@ -127,32 +127,7 @@ public class ContextTest {
         @Nested
         public class WithQualifier {
             @Test
-            void should_bind_instance_with_qualifier() {
-                TestComponent instance = new TestComponent() { };
-                contextConfig.bind(TestComponent.class, instance, new NamedLiteral("chooseOne"));
-
-                TestComponent chooseOne = contextConfig.getContext()
-                        .get(ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
-                        .get();
-
-                assertSame(instance, chooseOne);
-            }
-
-            @Test
-            void should_bind_component_with_qualifier() {
-                Dependency dependency = new Dependency() { };
-                contextConfig.bind(Dependency.class, dependency);
-                contextConfig.bind(TestComponent.class, ConstructorInjection.class, new NamedLiteral("chooseOne"));
-
-                TestComponent chooseOne = contextConfig.getContext()
-                        .get(ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
-                        .get();
-
-                assertSame(dependency, chooseOne.dependency());
-            }
-
-            @Test
-            void should_bind_instance_with_multi_qualifier() {
+            void should_bind_instance_with_multi_qualifiers() {
                 TestComponent instance = new TestComponent() { };
                 contextConfig.bind(TestComponent.class, instance, new NamedLiteral("chooseOne"), new NamedLiteral(
                         "skywalker"));
@@ -170,7 +145,7 @@ public class ContextTest {
             }
 
             @Test
-            void should_bind_component_with_multi_qualifier() {
+            void should_bind_component_with_multi_qualifiers() {
                 Dependency dependency = new Dependency() { };
                 contextConfig.bind(Dependency.class, dependency);
                 contextConfig.bind(TestComponent.class, ConstructorInjection.class, new NamedLiteral("chooseOne"),
