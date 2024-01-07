@@ -115,7 +115,7 @@ public class ContextTest {
             contextConfig.bind(TestComponent.class, instance);
 
             Context context = contextConfig.getContext();
-            Provider<TestComponent> provider = context.get(new ComponentRef<Provider<TestComponent>>(){}).get();
+            Provider<TestComponent> provider = context.get(new ComponentRef<Provider<TestComponent>>() { }).get();
 
             assertSame(provider.get(), instance);
         }
@@ -126,7 +126,7 @@ public class ContextTest {
             contextConfig.bind(TestComponent.class, instance);
 
             Context context = contextConfig.getContext();
-            assertFalse(context.get(new ComponentRef<List<TestComponent>>(){}).isPresent());
+            assertFalse(context.get(new ComponentRef<List<TestComponent>>() { }).isPresent());
         }
 
         @Nested
@@ -134,8 +134,8 @@ public class ContextTest {
             @Test
             void should_bind_instance_with_multi_qualifiers() {
                 TestComponent instance = new TestComponent() { };
-                contextConfig.bind(TestComponent.class, instance, new NamedLiteral("chooseOne"), new NamedLiteral(
-                        "skywalker"));
+                contextConfig.bind(TestComponent.class, instance, new NamedLiteral("chooseOne"),
+                        new NamedLiteral("skywalker"));
 
                 TestComponent chooseOne = contextConfig.getContext()
                         .get(ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
@@ -389,9 +389,14 @@ public class ContextTest {
             @Test
             void should_throw_exception_if_dependency_with_qualifier_not_found() {
                 contextConfig.bind(Dependency.class, new Dependency() { });
-                contextConfig.bind(InjectionConstructor.class, InjectionConstructor.class);
+                contextConfig.bind(InjectionConstructor.class, InjectionConstructor.class, new NamedLiteral("Owner"));
 
-                assertThrows(DependencyNotFoundException.class, () -> contextConfig.getContext());
+                DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
+                        () -> contextConfig.getContext());
+                assertEquals(new Component(InjectionConstructor.class, new NamedLiteral("Owner")),
+                        exception.getComponentComponent());
+                assertEquals(new Component(Dependency.class, new SkywalkerLiteral()),
+                        exception.getDependencyComponent());
             }
 
             static class InjectionConstructor {
@@ -423,13 +428,17 @@ record NamedLiteral(String value) implements jakarta.inject.Named {
 @Documented
 @Retention(RUNTIME)
 @Qualifier
-@interface Skywalker {
-}
+@interface Skywalker { }
 
 record SkywalkerLiteral() implements Skywalker {
     @Override
     public Class<? extends Annotation> annotationType() {
         return Skywalker.class;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Skywalker;
     }
 }
 
