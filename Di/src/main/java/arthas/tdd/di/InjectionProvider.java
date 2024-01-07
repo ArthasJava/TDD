@@ -1,7 +1,9 @@
 package arthas.tdd.di;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Qualifier;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -60,11 +62,19 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     @Override
     public List<ComponentRef> getDependencies() {
-        return concat(concat(stream(injectConstructor.getParameters()).map(Parameter::getParameterizedType),
-                injectFields.stream().map(Field::getGenericType)), injectMethods.stream()
-                .flatMap(m -> stream(m.getParameters()).map(Parameter::getParameterizedType))).map(
-                        ComponentRef::of)
-                .collect(Collectors.toList());
+        return concat(concat(stream(injectConstructor.getParameters()).map(InjectionProvider::toComponentRef),
+                        injectFields.stream().map(Field::getGenericType).map(ComponentRef::of)),
+                injectMethods.stream()
+                        .flatMap(m -> stream(m.getParameters()).map(Parameter::getParameterizedType))
+                        .map(ComponentRef::of)).collect(Collectors.toList());
+    }
+
+    private static ComponentRef toComponentRef(Parameter p) {
+        Annotation qualifier = stream(p.getAnnotations()).filter(
+                        annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
+                .findFirst()
+                .orElse(null);
+        return ComponentRef.of(p.getParameterizedType(), qualifier);
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {

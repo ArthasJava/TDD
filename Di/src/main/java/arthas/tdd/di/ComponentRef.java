@@ -21,6 +21,11 @@ public class ComponentRef<ComponentType> {
         return new ComponentRef(type, null);
     }
 
+    public static ComponentRef of(Type type, Annotation qualifier) {
+        return new ComponentRef(type, qualifier);
+    }
+
+
     ComponentRef(Type type, Annotation qualifier) {
         init(type, qualifier);
     }
@@ -70,5 +75,10 @@ public class ComponentRef<ComponentType> {
     @Override
     public int hashCode() {
         return Objects.hash(containerType, component);
+    }
+
+    @Override
+    public String toString() {
+        return "ComponentRef{" + "containerType=" + containerType + ", component=" + component + '}';
     }
 }

@@ -17,6 +17,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -410,6 +411,14 @@ record NamedLiteral(String value) implements jakarta.inject.Named {
     @Override
     public Class<? extends Annotation> annotationType() {
         return jakarta.inject.Named.class;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof jakarta.inject.Named named) {
+            return Objects.equals(value, named.value());
+        }
+        return false;
     }
 }
 

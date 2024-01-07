@@ -1,6 +1,7 @@
 package arthas.tdd.di;
 
 import jakarta.inject.Inject;
+import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -134,6 +135,21 @@ public class InjectionTest {
         class Qualifier {
             // TODO inject with qualifier
             // TODO include qualifier with dependency
+
+            static class InjectionConstructor {
+                @Inject
+                public InjectionConstructor(@Named("chooseOne") Dependency dependency) {
+                }
+            }
+
+            @Test
+            void should_include_qualifier_with_dependency() {
+                InjectionProvider<InjectionConstructor> provider = new InjectionProvider<>(InjectionConstructor.class);
+                assertArrayEquals(new ComponentRef<?>[]{
+                        ComponentRef.of(Dependency.class, new NamedLiteral("chooseOne"))
+                }, provider.getDependencies().toArray());
+            }
+
             // TODO throw illegal component if illegal qualifier given to injection point
         }
     }
