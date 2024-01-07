@@ -3,6 +3,7 @@ package arthas.tdd.di;
 import jakarta.inject.Provider;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -16,20 +17,23 @@ public class ContextConfig {
         providers.put(type, (ComponentProvider<Type>) context -> instance);
     }
 
-    public <Type> void bind(Class<Type> type, Type instance, Annotation qualifier) {
-        components.put(new Component(type, qualifier), (ComponentProvider<Type>) context -> instance);
+    public <Type> void bind(Class<Type> type, Type instance, Annotation... qualifiers) {
+        Arrays.stream(qualifiers)
+                .forEach(qualifier -> components.put(new Component(type, qualifier),
+                        (ComponentProvider<Type>) context -> instance));
     }
 
-    record Component(Class<?> type, Annotation qualifier) {
-    }
+    record Component(Class<?> type, Annotation qualifier) { }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
         providers.put(type, new InjectionProvider<>(implementation));
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation,
-            Annotation qualifier) {
-        components.put(new Component(type, qualifier), new InjectionProvider<>(implementation));
+            Annotation... qualifiers) {
+        Arrays.stream(qualifiers)
+                .forEach(qualifier -> components.put(new Component(type, qualifier),
+                        new InjectionProvider<>(implementation)));
     }
 
     public Context getContext() {
@@ -38,9 +42,9 @@ public class ContextConfig {
         return new Context() {
             @Override
             public <ComponentType> Optional<ComponentType> get(Ref<ComponentType> ref) {
-                if (ref.getQualifier() !=null) {
-                    return Optional.ofNullable(components.get(new Component(ref.getComponentType(),
-                                    ref.getQualifier())))
+                if (ref.getQualifier() != null) {
+                    return Optional.ofNullable(
+                                    components.get(new Component(ref.getComponentType(), ref.getQualifier())))
                             .map(componentProvider -> (ComponentType) componentProvider.get(this));
                 }
                 if (ref.isContainer()) {
