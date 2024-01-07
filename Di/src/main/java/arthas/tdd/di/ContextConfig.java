@@ -2,6 +2,7 @@ package arthas.tdd.di;
 
 import jakarta.inject.Provider;
 
+import java.lang.annotation.Annotation;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -9,9 +10,17 @@ import java.util.Stack;
 
 public class ContextConfig {
     private final Map<Class<?>, ComponentProvider<?>> providers = new HashMap<>();
+    private final Map<Component, ComponentProvider<?>> components = new HashMap<>();
 
     public <Type> void bind(Class<Type> type, Type instance) {
         providers.put(type, (ComponentProvider<Type>) context -> instance);
+    }
+
+    public <Type> void bind(Class<Type> type, Type instance, Annotation qualifier) {
+        components.put(new Component(type, qualifier), (ComponentProvider<Type>) context -> instance);
+    }
+
+    record Component(Class<?> type, Annotation qualifier) {
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
@@ -23,16 +32,21 @@ public class ContextConfig {
         providers.keySet().forEach(component -> checkDependencies(component, new Stack<>()));
         return new Context() {
             @Override
-            public Optional<?> get(Ref ref) {
+            public <ComponentType> Optional<ComponentType> get(Ref<ComponentType> ref) {
+                if (ref.getQualifier() !=null) {
+                    return Optional.ofNullable(components.get(new Component(ref.getComponentType(),
+                                    ref.getQualifier())))
+                            .map(componentProvider -> (ComponentType) componentProvider.get(this));
+                }
                 if (ref.isContainer()) {
                     if (ref.getContainerType() != Provider.class) {
                         return Optional.empty();
                     }
-                    return Optional.ofNullable(providers.get(ref.getComponentType()))
+                    return (Optional<ComponentType>) Optional.ofNullable(providers.get(ref.getComponentType()))
                             .map(componentProvider -> (Provider<Object>) () -> componentProvider.get(this));
                 }
                 return Optional.ofNullable(providers.get(ref.getComponentType()))
-                        .map(componentProvider -> componentProvider.get(this));
+                        .map(componentProvider -> (ComponentType) componentProvider.get(this));
             }
         };
     }
