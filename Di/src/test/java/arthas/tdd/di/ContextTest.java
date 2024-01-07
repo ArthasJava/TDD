@@ -2,6 +2,7 @@ package arthas.tdd.di;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
+import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
@@ -11,12 +12,15 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ContextTest {
@@ -149,14 +153,14 @@ public class ContextTest {
                 Dependency dependency = new Dependency() { };
                 contextConfig.bind(Dependency.class, dependency);
                 contextConfig.bind(TestComponent.class, ConstructorInjection.class, new NamedLiteral("chooseOne"),
-                        new NamedLiteral("skywalker"));
+                        new SkywalkerLiteral());
 
                 TestComponent chooseOne = contextConfig.getContext()
                         .get(ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
                         .get();
 
                 TestComponent skywalker = contextConfig.getContext()
-                        .get(ComponentRef.of(TestComponent.class, new NamedLiteral("skywalker")))
+                        .get(ComponentRef.of(TestComponent.class, new SkywalkerLiteral()))
                         .get();
 
                 assertSame(dependency, chooseOne.dependency());
@@ -373,9 +377,22 @@ public class ContextTest {
 }
 
 record NamedLiteral(String value) implements jakarta.inject.Named {
-
     @Override
     public Class<? extends Annotation> annotationType() {
         return jakarta.inject.Named.class;
     }
 }
+
+@Documented
+@Retention(RUNTIME)
+@Qualifier
+@interface Skywalker {
+}
+
+record SkywalkerLiteral() implements Skywalker {
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return Skywalker.class;
+    }
+}
+
