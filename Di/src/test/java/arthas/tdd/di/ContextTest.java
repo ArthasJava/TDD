@@ -126,8 +126,6 @@ public class ContextTest {
 
         @Nested
         public class WithQualifier {
-            // TODO bind component with qualifier
-
             @Test
             void should_bind_instance_with_qualifier() {
                 Component instance = new Component() { };
@@ -138,6 +136,19 @@ public class ContextTest {
                         .get();
 
                 assertSame(instance, chooseOne);
+            }
+
+            @Test
+            void should_bind_component_with_qualifier() {
+                Dependency dependency = new Dependency() { };
+                contextConfig.bind(Dependency.class, dependency);
+                contextConfig.bind(Component.class, ConstructorInjection.class, new NamedLiteral("chooseOne"));
+
+                Component chooseOne = contextConfig.getContext()
+                        .get(Context.Ref.of(Component.class, new NamedLiteral("chooseOne")))
+                        .get();
+
+                assertSame(dependency, chooseOne.dependency());
             }
 
             // TODO bind component with multi qualifier
