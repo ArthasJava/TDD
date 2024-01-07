@@ -32,7 +32,7 @@ public class ContextTest {
         @Test
         void should_return_empty_if_component_not_defined() {
             Context context = contextConfig.getContext();
-            Optional<TestComponent> component = context.get(Context.Ref.of(TestComponent.class));
+            Optional<TestComponent> component = context.get(Context.ComponentRef.of(TestComponent.class));
             assertFalse(component.isPresent());
         }
 
@@ -42,7 +42,7 @@ public class ContextTest {
             contextConfig.bind(TestComponent.class, instance);
 
             Context context = contextConfig.getContext();
-            Optional<TestComponent> component = context.get(Context.Ref.of(TestComponent.class));
+            Optional<TestComponent> component = context.get(Context.ComponentRef.of(TestComponent.class));
             assertTrue(component.isPresent());
             assertSame(instance, component.get());
         }
@@ -55,7 +55,7 @@ public class ContextTest {
             contextConfig.bind(TestComponent.class, componentType);
 
             Context context = contextConfig.getContext();
-            Optional<? extends TestComponent> component = context.get(Context.Ref.of(TestComponent.class));
+            Optional<? extends TestComponent> component = context.get(Context.ComponentRef.of(TestComponent.class));
             assertTrue(component.isPresent());
             assertSame(dependency, component.get().dependency());
         }
@@ -110,7 +110,7 @@ public class ContextTest {
             contextConfig.bind(TestComponent.class, instance);
 
             Context context = contextConfig.getContext();
-            Provider<TestComponent> provider = context.get(new Context.Ref<Provider<TestComponent>>(){}).get();
+            Provider<TestComponent> provider = context.get(new Context.ComponentRef<Provider<TestComponent>>(){}).get();
 
             assertSame(provider.get(), instance);
         }
@@ -121,7 +121,7 @@ public class ContextTest {
             contextConfig.bind(TestComponent.class, instance);
 
             Context context = contextConfig.getContext();
-            assertFalse(context.get(new Context.Ref<List<TestComponent>>(){}).isPresent());
+            assertFalse(context.get(new Context.ComponentRef<List<TestComponent>>(){}).isPresent());
         }
 
         @Nested
@@ -132,7 +132,7 @@ public class ContextTest {
                 contextConfig.bind(TestComponent.class, instance, new NamedLiteral("chooseOne"));
 
                 TestComponent chooseOne = contextConfig.getContext()
-                        .get(Context.Ref.of(TestComponent.class, new NamedLiteral("chooseOne")))
+                        .get(Context.ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
                         .get();
 
                 assertSame(instance, chooseOne);
@@ -145,7 +145,7 @@ public class ContextTest {
                 contextConfig.bind(TestComponent.class, ConstructorInjection.class, new NamedLiteral("chooseOne"));
 
                 TestComponent chooseOne = contextConfig.getContext()
-                        .get(Context.Ref.of(TestComponent.class, new NamedLiteral("chooseOne")))
+                        .get(Context.ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
                         .get();
 
                 assertSame(dependency, chooseOne.dependency());
@@ -158,11 +158,11 @@ public class ContextTest {
                         "skywalker"));
 
                 TestComponent chooseOne = contextConfig.getContext()
-                        .get(Context.Ref.of(TestComponent.class, new NamedLiteral("chooseOne")))
+                        .get(Context.ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
                         .get();
 
                 TestComponent skywalker = contextConfig.getContext()
-                        .get(Context.Ref.of(TestComponent.class, new NamedLiteral("skywalker")))
+                        .get(Context.ComponentRef.of(TestComponent.class, new NamedLiteral("skywalker")))
                         .get();
 
                 assertSame(instance, chooseOne);
@@ -177,11 +177,11 @@ public class ContextTest {
                         new NamedLiteral("skywalker"));
 
                 TestComponent chooseOne = contextConfig.getContext()
-                        .get(Context.Ref.of(TestComponent.class, new NamedLiteral("chooseOne")))
+                        .get(Context.ComponentRef.of(TestComponent.class, new NamedLiteral("chooseOne")))
                         .get();
 
                 TestComponent skywalker = contextConfig.getContext()
-                        .get(Context.Ref.of(TestComponent.class, new NamedLiteral("skywalker")))
+                        .get(Context.ComponentRef.of(TestComponent.class, new NamedLiteral("skywalker")))
                         .get();
 
                 assertSame(dependency, chooseOne.dependency());
@@ -386,7 +386,7 @@ public class ContextTest {
             contextConfig.bind(Dependency.class, CyclicDependencyProviderConstructor.class);
 
             Context context = contextConfig.getContext();
-            assertTrue(context.get(Context.Ref.of(TestComponent.class)).isPresent());
+            assertTrue(context.get(Context.ComponentRef.of(TestComponent.class)).isPresent());
         }
 
         @Nested

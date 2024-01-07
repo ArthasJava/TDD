@@ -7,31 +7,31 @@ import java.util.Objects;
 import java.util.Optional;
 
 public interface Context {
-    <ComponentType> Optional<ComponentType> get(Ref<ComponentType> ref);
+    <ComponentType> Optional<ComponentType> get(ComponentRef<ComponentType> ref);
 
-    class Ref<ComponentType> {
+    class ComponentRef<ComponentType> {
         private Type containerType;
         private Class<?> componentType;
         private Annotation qualifier;
 
-        public static <ComponentType> Ref<ComponentType> of(Class<ComponentType> component) {
-            return new Ref<>(component, null);
+        public static <ComponentType> ComponentRef<ComponentType> of(Class<ComponentType> component) {
+            return new ComponentRef<>(component, null);
         }
 
-        public static <ComponentType> Ref<ComponentType> of(Class<ComponentType> component, Annotation qualifier) {
-            return new Ref<>(component, qualifier);
+        public static <ComponentType> ComponentRef<ComponentType> of(Class<ComponentType> component, Annotation qualifier) {
+            return new ComponentRef<>(component, qualifier);
         }
 
-        public static Ref of(Type type) {
-            return new Ref(type, null);
+        public static ComponentRef of(Type type) {
+            return new ComponentRef(type, null);
         }
 
-        Ref(Type type, Annotation qualifier) {
+        ComponentRef(Type type, Annotation qualifier) {
             init(type);
             this.qualifier = qualifier;
         }
 
-        protected Ref() {
+        protected ComponentRef() {
             Type type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
             init(type);
         }
@@ -69,7 +69,7 @@ public interface Context {
             if (o == null || getClass() != o.getClass()) {
                 return false;
             }
-            Ref ref = (Ref) o;
+            ComponentRef ref = (ComponentRef) o;
             return Objects.equals(containerType, ref.containerType) && Objects.equals(componentType, ref.componentType);
         }
 

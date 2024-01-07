@@ -38,7 +38,7 @@ public class ContextConfig {
         components.keySet().forEach(component -> checkDependencies(component, new Stack<>()));
         return new Context() {
             @Override
-            public <ComponentType> Optional<ComponentType> get(Ref<ComponentType> ref) {
+            public <ComponentType> Optional<ComponentType> get(ComponentRef<ComponentType> ref) {
                 if (ref.isContainer()) {
                     if (ref.getContainerType() != Provider.class) {
                         return Optional.empty();
@@ -52,12 +52,12 @@ public class ContextConfig {
         };
     }
 
-    private <ComponentType> ComponentProvider<?> getProvider(Context.Ref<ComponentType> ref) {
+    private <ComponentType> ComponentProvider<?> getProvider(Context.ComponentRef<ComponentType> ref) {
         return components.get(new Component(ref.getComponentType(), ref.getQualifier()));
     }
 
     private void checkDependencies(Component component, Stack<Class<?>> visiting) {
-        for (Context.Ref dependency : components.get(component).getDependencies()) {
+        for (Context.ComponentRef dependency : components.get(component).getDependencies()) {
             Component dependencyComponent = new Component(dependency.getComponentType(), dependency.getQualifier());
             if (!components.containsKey(dependencyComponent)) {
                 throw new DependencyNotFoundException(component.type(), dependency.getComponentType());
