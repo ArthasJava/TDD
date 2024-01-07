@@ -52,12 +52,12 @@ public class ContextConfig {
         };
     }
 
-    private <ComponentType> ComponentProvider<?> getProvider(Context.ComponentRef<ComponentType> ref) {
+    private <ComponentType> ComponentProvider<?> getProvider(ComponentRef<ComponentType> ref) {
         return components.get(new Component(ref.getComponentType(), ref.getQualifier()));
     }
 
     private void checkDependencies(Component component, Stack<Class<?>> visiting) {
-        for (Context.ComponentRef dependency : components.get(component).getDependencies()) {
+        for (ComponentRef dependency : components.get(component).getDependencies()) {
             Component dependencyComponent = new Component(dependency.getComponentType(), dependency.getQualifier());
             if (!components.containsKey(dependencyComponent)) {
                 throw new DependencyNotFoundException(component.type(), dependency.getComponentType());
