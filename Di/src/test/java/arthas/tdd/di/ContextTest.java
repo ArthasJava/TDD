@@ -4,7 +4,6 @@ import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -388,7 +387,6 @@ public class ContextTest {
             // TODO dependency missing if qualifier not match
 
             @Test
-            @Disabled
             void should_throw_exception_if_dependency_with_qualifier_not_found() {
                 contextConfig.bind(Dependency.class, new Dependency() { });
                 contextConfig.bind(InjectionConstructor.class, InjectionConstructor.class);
