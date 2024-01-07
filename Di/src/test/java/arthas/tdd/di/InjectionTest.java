@@ -133,6 +133,7 @@ public class InjectionTest {
         @Nested
         class Qualifier {
             // TODO inject with qualifier
+            // TODO include qualifier with dependency
             // TODO throw illegal component if illegal qualifier given to injection point
         }
     }
@@ -205,8 +206,9 @@ public class InjectionTest {
 
         @Nested
         class WithQualifier {
-            // TODO throw illegal component if illegal qualifier given to injection point
             // TODO inject with qualifier
+            // TODO include qualifier with dependency
+            // TODO throw illegal component if illegal qualifier given to injection point
         }
     }
 
@@ -352,8 +354,9 @@ public class InjectionTest {
 
         @Nested
         class WithQualifier {
-            // TODO throw illegal component if illegal qualifier given to injection point
             // TODO inject with qualifier
+            // TODO include qualifier with dependency
+            // TODO throw illegal component if illegal qualifier given to injection point
         }
     }
 }
