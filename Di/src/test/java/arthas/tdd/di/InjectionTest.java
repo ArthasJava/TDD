@@ -90,7 +90,7 @@ public class InjectionTest {
 
         @Nested
         class IllegalInjectConstructor {
-            static abstract class AbstractComponent implements Component { }
+            static abstract class AbstractComponent implements TestComponent { }
 
             @Test
             void should_throw_exception_if_component_is_abstract() {
@@ -99,7 +99,7 @@ public class InjectionTest {
 
             @Test
             void should_throw_exception_if_component_is_interface() {
-                assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(Component.class));
+                assertThrows(IllegalComponentException.class, () -> new InjectionProvider<>(TestComponent.class));
             }
 
             static class MultiInjectConstructors {
@@ -141,7 +141,7 @@ public class InjectionTest {
     public class FieldInjection {
         @Nested
         class Injection {
-            static class ComponentWithFieldInjection implements Component {
+            static class ComponentWithFieldInjection implements TestComponent {
                 @Inject
                 Dependency dependency;
             }

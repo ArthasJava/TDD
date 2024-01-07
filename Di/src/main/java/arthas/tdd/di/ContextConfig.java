@@ -22,8 +22,6 @@ public class ContextConfig {
                         (ComponentProvider<Type>) context -> instance));
     }
 
-    record Component(Class<?> type, Annotation qualifier) { }
-
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
         components.put(new Component(type, null), new InjectionProvider<>(implementation));
     }
