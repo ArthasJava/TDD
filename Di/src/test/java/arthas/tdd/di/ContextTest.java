@@ -28,7 +28,6 @@ public class ContextTest {
 
     @Nested
     public class TypeBinding {
-        // TODO instance
         @Test
         void should_return_empty_if_component_not_defined() {
             Context context = contextConfig.getContext();
@@ -122,6 +121,13 @@ public class ContextTest {
 
             Context context = contextConfig.getContext();
             assertFalse(context.get(new Context.Ref<List<Component>>(){}).isPresent());
+        }
+
+        @Nested
+        public class WithQualifier {
+            // TODO bind component with qualifier
+            // TODO bind component with multi qualifier
+            // TODO throw illegal component if illegal qualifier
         }
     }
 
@@ -320,6 +326,12 @@ public class ContextTest {
 
             Context context = contextConfig.getContext();
             assertTrue(context.get(Context.Ref.of(Component.class)).isPresent());
+        }
+
+        @Nested
+        public class WithQualifier {
+            // TODO dependency missing if qualifier not match
+            // TODO check cyclic dependencies with qualifier
         }
     }
 }
