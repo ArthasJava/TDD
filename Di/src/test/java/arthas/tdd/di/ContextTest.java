@@ -405,7 +405,28 @@ public class ContextTest {
                 }
             }
 
+            static class SkywalkerDependency implements Dependency {
+                @Inject
+                public SkywalkerDependency(@jakarta.inject.Named("chooseOne") Dependency dependency) {
+                }
+            }
+
+            static class NoCyclicDependency implements Dependency {
+                @Inject
+                public NoCyclicDependency(@Skywalker Dependency dependency) {
+                }
+            }
+
             // TODO check cyclic dependencies with qualifier
+
+            @Test
+            void should_not_throw_cyclic_exception_if_dependency_with_same_type_but_tagged_with_different_qualifier() {
+                contextConfig.bind(Dependency.class, new Dependency() { }, new NamedLiteral("chooseOne"));
+                contextConfig.bind(Dependency.class, SkywalkerDependency.class, new SkywalkerLiteral());
+                contextConfig.bind(Dependency.class, NoCyclicDependency.class);
+
+                assertDoesNotThrow(() -> contextConfig.getContext());
+            }
         }
     }
 }
@@ -422,6 +443,12 @@ record NamedLiteral(String value) implements jakarta.inject.Named {
             return Objects.equals(value, named.value());
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        // Annotation Hash Code 要求
+        return "value".hashCode() * 127 ^ value.hashCode();
     }
 }
 
