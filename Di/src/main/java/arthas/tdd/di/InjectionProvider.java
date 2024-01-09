@@ -69,19 +69,29 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     private static ComponentRef toComponentRef(Field field) {
+        Annotation qualifier = getQualifier(field);
+        return ComponentRef.of(field.getGenericType(), qualifier);
+    }
+
+    private static Annotation getQualifier(Field field) {
         Annotation qualifier = stream(field.getAnnotations()).filter(
                         annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
                 .findFirst()
                 .orElse(null);
-        return ComponentRef.of(field.getGenericType(), qualifier);
+        return qualifier;
     }
 
     private static ComponentRef toComponentRef(Parameter p) {
+        Annotation qualifier = getQualifier(p);
+        return ComponentRef.of(p.getParameterizedType(), qualifier);
+    }
+
+    private static Annotation getQualifier(Parameter p) {
         Annotation qualifier = stream(p.getAnnotations()).filter(
                         annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
                 .findFirst()
                 .orElse(null);
-        return ComponentRef.of(p.getParameterizedType(), qualifier);
+        return qualifier;
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
@@ -136,15 +146,15 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     private static <T> Object[] toDependencies(Context context, Executable executable) {
         return stream(executable.getParameters()).map(
-                parameter -> toDependency(context, parameter.getParameterizedType())).toArray();
+                parameter -> toDependency(context, parameter.getParameterizedType(), getQualifier(parameter))).toArray();
     }
 
     private static Object toDependency(Context context, Field field) {
-        return toDependency(context, field.getGenericType());
+        return toDependency(context, field.getGenericType(), getQualifier(field));
     }
 
-    private static Object toDependency(Context context, Type type) {
-        return context.get(ComponentRef.of(type)).get();
+    private static Object toDependency(Context context, Type type, Annotation qualifier) {
+        return context.get(ComponentRef.of(type, qualifier)).get();
     }
 
     private static <T> List<T> traverse(Class<?> component, BiFunction<Class<?>, List<T>, List<T>> finder) {

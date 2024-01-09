@@ -133,12 +133,26 @@ public class InjectionTest {
 
         @Nested
         class Qualifier {
-            // TODO inject with qualifier
+            @BeforeEach
+            void setUp() {
+                reset(context);
+                when(context.get(eq(ComponentRef.of(Dependency.class, new NamedLiteral("chooseOne"))))).thenReturn(
+                        Optional.of(dependency));
+            }
 
             static class InjectionConstructor {
+                Dependency dependency;
+
                 @Inject
                 public InjectionConstructor(@Named("chooseOne") Dependency dependency) {
+                    this.dependency = dependency;
                 }
+            }
+
+            @Test
+            void should_inject_dependency_with_qualifier() {
+                InjectionProvider<InjectionConstructor> provider = new InjectionProvider<>(InjectionConstructor.class);
+                assertSame(dependency, provider.get(context).dependency);
             }
 
             @Test
@@ -221,12 +235,24 @@ public class InjectionTest {
 
         @Nested
         class WithQualifier {
-            // TODO inject with qualifier
-            // TODO include qualifier with dependency
+            @BeforeEach
+            void setUp() {
+                reset(context);
+                when(context.get(eq(ComponentRef.of(Dependency.class, new NamedLiteral("chooseOne"))))).thenReturn(
+                        Optional.of(dependency));
+            }
+
             static class InjectionField {
                 @Inject
                 @Named("chooseOne")
                 Dependency dependency;
+            }
+
+            @Test
+            void should_inject_dependency_with_qualifier() {
+                InjectionProvider<InjectionField> provider = new InjectionProvider<>(
+                        InjectionField.class);
+                assertSame(dependency, provider.get(context).dependency);
             }
 
             @Test
@@ -382,12 +408,26 @@ public class InjectionTest {
 
         @Nested
         class WithQualifier {
-            // TODO inject with qualifier
-            // TODO include qualifier with dependency
+            @BeforeEach
+            void setUp() {
+                reset(context);
+                when(context.get(eq(ComponentRef.of(Dependency.class, new NamedLiteral("chooseOne"))))).thenReturn(
+                        Optional.of(dependency));
+            }
+
             static class InjectionMethod {
+                Dependency dependency;
+
                 @Inject
                 void install(@Named("chooseOne") Dependency dependency) {
+                    this.dependency = dependency;
                 }
+            }
+
+            @Test
+            void should_inject_dependency_with_qualifier() {
+                InjectionProvider<InjectionMethod> provider = new InjectionProvider<>(InjectionMethod.class);
+                assertSame(dependency, provider.get(context).dependency);
             }
 
             @Test
