@@ -28,6 +28,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     private final Constructor<T> injectConstructor;
     private final List<Field> injectFields;
     private final List<Method> injectMethods;
+    private final List<ComponentRef> dependencies;
 
     public InjectionProvider(Class<T> component) {
         if (Modifier.isAbstract(component.getModifiers())) {
@@ -42,6 +43,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         if (injectMethods.stream().anyMatch(method -> method.getTypeParameters().length != 0)) {
             throw new IllegalComponentException();
         }
+        this.dependencies = getDependencies();
     }
 
     @Override
@@ -73,25 +75,18 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         return ComponentRef.of(field.getGenericType(), qualifier);
     }
 
-    private static Annotation getQualifier(Field field) {
-        Annotation qualifier = stream(field.getAnnotations()).filter(
-                        annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
-                .findFirst()
-                .orElse(null);
-        return qualifier;
-    }
-
     private static ComponentRef toComponentRef(Parameter p) {
         Annotation qualifier = getQualifier(p);
         return ComponentRef.of(p.getParameterizedType(), qualifier);
     }
 
-    private static Annotation getQualifier(Parameter p) {
-        Annotation qualifier = stream(p.getAnnotations()).filter(
-                        annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
-                .findFirst()
-                .orElse(null);
-        return qualifier;
+    private static Annotation getQualifier(AnnotatedElement element) {
+        List<Annotation> qualifiers = stream(element.getAnnotations()).filter(
+                annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class)).collect(Collectors.toList());
+        if (qualifiers.size() > 1) {
+            throw new IllegalComponentException();
+        }
+        return qualifiers.stream().findFirst().orElse(null);
     }
 
     private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {

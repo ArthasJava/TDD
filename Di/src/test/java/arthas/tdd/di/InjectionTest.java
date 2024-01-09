@@ -163,7 +163,17 @@ public class InjectionTest {
                 }, provider.getDependencies().toArray());
             }
 
-            // TODO throw illegal component if illegal qualifier given to injection point
+            static class MultiQualifierInjectConstructor {
+                @Inject
+                public MultiQualifierInjectConstructor(@Named("chooseOne") @Skywalker Dependency dependency) {
+                }
+            }
+
+            @Test
+            void should_throw_exception_if_inject_with_multi_qualifiers_given() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new InjectionProvider<>(MultiQualifierInjectConstructor.class));
+            }
         }
     }
 
@@ -250,8 +260,7 @@ public class InjectionTest {
 
             @Test
             void should_inject_dependency_with_qualifier() {
-                InjectionProvider<InjectionField> provider = new InjectionProvider<>(
-                        InjectionField.class);
+                InjectionProvider<InjectionField> provider = new InjectionProvider<>(InjectionField.class);
                 assertSame(dependency, provider.get(context).dependency);
             }
 
@@ -262,7 +271,19 @@ public class InjectionTest {
                         ComponentRef.of(Dependency.class, new NamedLiteral("chooseOne"))
                 }, provider.getDependencies().toArray());
             }
-            // TODO throw illegal component if illegal qualifier given to injection point
+
+            static class MultiQualifierInjectField {
+                @Inject
+                @Named("chooseOne")
+                @Skywalker
+                Dependency dependency;
+            }
+
+            @Test
+            void should_throw_exception_if_inject_with_multi_qualifiers_given() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new InjectionProvider<>(MultiQualifierInjectField.class));
+            }
         }
     }
 
@@ -437,7 +458,18 @@ public class InjectionTest {
                         ComponentRef.of(Dependency.class, new NamedLiteral("chooseOne"))
                 }, provider.getDependencies().toArray());
             }
-            // TODO throw illegal component if illegal qualifier given to injection point
+
+            static class MultiQualifierInjectMethod {
+                @Inject
+                void install(@Named("chooseOne") @Skywalker Dependency dependency) {
+                }
+            }
+
+            @Test
+            void should_throw_exception_if_inject_with_multi_qualifiers_given() {
+                assertThrows(IllegalComponentException.class,
+                        () -> new InjectionProvider<>(MultiQualifierInjectMethod.class));
+            }
         }
     }
 }
