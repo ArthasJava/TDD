@@ -30,7 +30,7 @@ public class ContextConfig {
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
-        components.put(new Component(type, null), new InjectionProvider<>(implementation));
+        bind(type, implementation, type.getAnnotations());
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation,
@@ -44,8 +44,14 @@ public class ContextConfig {
                 .filter(annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
                 .toList();
 
+        Optional<Annotation> scopeFromType = Arrays.stream(type.getAnnotations())
+                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class))
+                .findFirst();
+
         Optional<Annotation> scope = Arrays.stream(annotations)
-                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class)).findFirst();
+                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class))
+                .findFirst()
+                .or(() -> scopeFromType);
 
         ComponentProvider<Implementation> injectionProvider = new InjectionProvider<>(implementation);
         ComponentProvider<Implementation> provider = scope.map(
@@ -54,8 +60,7 @@ public class ContextConfig {
         if (qualifiers.isEmpty()) {
             components.put(new Component(type, null), provider);
         }
-        qualifiers.forEach(
-                qualifier -> components.put(new Component(type, qualifier), provider));
+        qualifiers.forEach(qualifier -> components.put(new Component(type, qualifier), provider));
     }
 
     static class SingletonInjectionProvider<T> implements ComponentProvider<T> {
