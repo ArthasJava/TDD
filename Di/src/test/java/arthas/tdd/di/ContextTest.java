@@ -195,8 +195,16 @@ public class ContextTest {
                 assertThrows(IllegalComponentException.class,
                         () -> contextConfig.bind(TestComponent.class, ConstructorInjection.class, new TestLiteral()));
             }
+        }
 
-            // TODO Provider 
+        @Nested
+        public class WithScope {
+            // TODO default scope should not be singleton
+            // TODO bind component as singleton scoped
+            // TODO bind component with qualifiers as singleton scoped
+            // TODO get scope from component class
+            // TODO get scope from component class with qualifier
+            // TODO bind component with customize scope annotation
         }
     }
 
@@ -223,6 +231,8 @@ public class ContextTest {
                     Arguments.of(Named.of("Provider In Injection Field", MissDependencyProviderField.class)),
                     Arguments.of(Named.of("Provider In Injection Method", MissDependencyProviderMethod.class)));
         }
+
+        // TODO missing dependencies with scope
 
         static class MissDependencyProviderConstructor {
             @Inject
@@ -272,6 +282,8 @@ public class ContextTest {
             }
             return arguments.stream();
         }
+
+        // TODO cyclic dependencies with scope
 
         static class CyclicComponentInjectConstructor implements TestComponent {
             @Inject
