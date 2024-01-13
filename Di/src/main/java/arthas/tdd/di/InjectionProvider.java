@@ -34,13 +34,9 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         if (Modifier.isAbstract(component.getModifiers())) {
             throw new IllegalComponentException();
         }
-        this.injectConstructors = Injectable.of(getInjectConstructor(component));
-        this.injectFields = getInjectFields(component).stream()
-                .map(Injectable::of)
-                .toList();
-        this.injectMethods = getInjectMethods(component).stream()
-                .map(Injectable::of)
-                .toList();
+        this.injectConstructors = getInjectConstructor(component);
+        this.injectFields = getInjectFields(component);
+        this.injectMethods = getInjectMethods(component);
 
         if (injectFields.stream()
                 .map(Injectable::element)
@@ -71,11 +67,11 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     static record Injectable<Element extends AccessibleObject>(Element element, ComponentRef<?>[] required) {
+
         public static <Element extends Executable> Injectable<Element> of(Element element) {
             return new Injectable<>(element,
                     stream(element.getParameters()).map(Injectable::toComponentRef).toArray(ComponentRef<?>[]::new));
         }
-
         public static Injectable<Field> of(Field field) {
             return new Injectable<>(field, new ComponentRef[]{toComponentRef(field)});
         }
@@ -103,8 +99,8 @@ class InjectionProvider<T> implements ComponentProvider<T> {
             }
             return qualifiers.stream().findFirst().orElse(null);
         }
-    }
 
+    }
     @Override
     public List<ComponentRef> getDependencies() {
         return concat(concat(stream(this.injectConstructors.required),
@@ -113,14 +109,31 @@ class InjectionProvider<T> implements ComponentProvider<T> {
                 Collectors.toList());
     }
 
-    private static <Type> Constructor<Type> getInjectConstructor(Class<Type> implementation) {
-        List<Constructor<?>> injectConstructors = injectable(implementation.getConstructors()).toList();
+
+    private static <T> Injectable<Constructor<T>> getInjectConstructor(Class<T> component) {
+        List<Constructor<?>> injectConstructors = injectable(component.getConstructors()).toList();
         if (injectConstructors.size() > 1) {
             throw new IllegalComponentException();
         }
-        return (Constructor<Type>) injectConstructors.stream()
+        return Injectable.of((Constructor<T>) injectConstructors.stream()
                 .findFirst()
-                .orElseGet(() -> defaultConstructor(implementation));
+                .orElseGet(() -> defaultConstructor(component)));
+    }
+
+    private static <T> List<Injectable<Field>> getInjectFields(Class<T> component) {
+        List<Field> injectFields = traverse(component,
+                (current, fields) -> injectable(current.getDeclaredFields()).toList());
+        return injectFields.stream().map(Injectable::of).toList();
+    }
+
+    private static <T> List<Injectable<Method>> getInjectMethods(Class<T> component) {
+        List<Method> injectMethods = traverse(component,
+                (current, methods1) -> injectable(current.getDeclaredMethods()).filter(
+                                method -> isOverrideByInjectMethod(method, methods1))
+                        .filter(method -> isOverrideByNoInjectMethod(component, method))
+                        .toList());
+        Collections.reverse(injectMethods);
+        return injectMethods.stream().map(Injectable::of).toList();
     }
 
     private static <Type> Constructor<Type> defaultConstructor(Class<Type> implementation) {
@@ -129,20 +142,6 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         } catch (NoSuchMethodException e) {
             throw new IllegalComponentException();
         }
-    }
-
-    private static <T> List<Field> getInjectFields(Class<T> component) {
-        return traverse(component, (current, fields) -> injectable(current.getDeclaredFields()).toList());
-    }
-
-    private static <T> List<Method> getInjectMethods(Class<T> component) {
-        List<Method> injectMethods = traverse(component,
-                (current, methods) -> injectable(current.getDeclaredMethods()).filter(
-                                method -> isOverrideByInjectMethod(method, methods))
-                        .filter(method -> isOverrideByNoInjectMethod(component, method))
-                        .toList());
-        Collections.reverse(injectMethods);
-        return injectMethods;
     }
 
     private static <T extends AnnotatedElement> Stream<T> injectable(T[] declaredFields) {
