@@ -218,7 +218,6 @@ public class ContextTest {
                         context.get(ComponentRef.of(NoSingleton.class)).get());
             }
 
-            // TODO get scope from component class
             @Singleton
             static class SingletonAnnotated implements Dependency { }
 
