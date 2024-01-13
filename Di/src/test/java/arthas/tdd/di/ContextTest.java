@@ -3,6 +3,7 @@ package arthas.tdd.di;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
 import jakarta.inject.Singleton;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
@@ -15,11 +16,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -229,7 +233,16 @@ public class ContextTest {
                         context.get(ComponentRef.of(Dependency.class)).get());
             }
 
-            // TODO bind component with customize scope annotation
+            @Test
+            void should_bind_component_with_customize_scope_annotation() {
+                contextConfig.scope(Pooled.class, PooledInjectionProvider::new);
+                contextConfig.bind(NoSingleton.class, NoSingleton.class, new PooledLiteral());
+                Context context = contextConfig.getContext();
+                assertEquals(PooledInjectionProvider.MAX, (long) IntStream.range(0, PooledInjectionProvider.MAX + 1)
+                        .mapToObj(i -> context.get(ComponentRef.of(NoSingleton.class)).get())
+                        .collect(Collectors.toSet())
+                        .size());
+            }
 
             @Nested
             public class WithQualifier {
@@ -646,9 +659,44 @@ record TestLiteral() implements Test {
 }
 
 record SingletonLiteral() implements Singleton {
-
     @Override
     public Class<? extends Annotation> annotationType() {
         return Singleton.class;
+    }
+}
+
+@Scope
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@interface Pooled { }
+
+record PooledLiteral() implements Pooled {
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return Pooled.class;
+    }
+}
+
+class PooledInjectionProvider<T> implements ComponentProvider<T> {
+    static int MAX = 2;
+    int current = 0;
+    private List<T> pool = new ArrayList<>();
+    private ComponentProvider<T> provider;
+
+    public PooledInjectionProvider(ComponentProvider<T> provider) {
+        this.provider = provider;
+    }
+
+    @Override
+    public T get(Context context) {
+        if (pool.size() < MAX) {
+            pool.add(provider.get(context));
+        }
+        return pool.get(current++ % MAX);
+    }
+
+    @Override
+    public List<ComponentRef<?>> getDependencies() {
+        return provider.getDependencies();
     }
 }

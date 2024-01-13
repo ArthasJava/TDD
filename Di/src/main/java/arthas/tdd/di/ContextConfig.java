@@ -3,6 +3,7 @@ package arthas.tdd.di;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
 import jakarta.inject.Scope;
+import jakarta.inject.Singleton;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -11,9 +12,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.function.Function;
 
 public class ContextConfig {
     private final Map<Component, ComponentProvider<?>> components = new HashMap<>();
+    private final Map<Class<?>, Function<ComponentProvider<?>, ComponentProvider<?>>> scopes = new HashMap<>();
+
+    public ContextConfig() {
+        scopes.put(Singleton.class, SingletonInjectionProvider::new);
+    }
 
     public <Type> void bind(Class<Type> type, Type instance) {
         components.put(new Component(type, null), (ComponentProvider<Type>) context -> instance);
@@ -55,12 +62,20 @@ public class ContextConfig {
 
         ComponentProvider<Implementation> injectionProvider = new InjectionProvider<>(implementation);
         ComponentProvider<Implementation> provider = scope.map(
-                        s -> (ComponentProvider<Implementation>) new SingletonInjectionProvider<>(injectionProvider))
-                .orElse(injectionProvider);
+                s -> (ComponentProvider<Implementation>) getProvider(s, injectionProvider)).orElse(injectionProvider);
         if (qualifiers.isEmpty()) {
             components.put(new Component(type, null), provider);
         }
         qualifiers.forEach(qualifier -> components.put(new Component(type, qualifier), provider));
+    }
+
+    private ComponentProvider<?> getProvider(Annotation scope, ComponentProvider<?> injectionProvider) {
+        return scopes.get(scope.annotationType()).apply(injectionProvider);
+    }
+
+    public <ScopeType extends Annotation> void scope(Class<ScopeType> scope,
+            Function<ComponentProvider<?>, ComponentProvider<?>> provider) {
+        scopes.put(scope, provider);
     }
 
     static class SingletonInjectionProvider<T> implements ComponentProvider<T> {
