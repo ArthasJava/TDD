@@ -3,6 +3,7 @@ package arthas.tdd.di;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
+import jakarta.inject.Singleton;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Nested;
@@ -209,8 +210,14 @@ public class ContextTest {
                         context.get(ComponentRef.of(NoSingleton.class)).get());
             }
 
-            // TODO bind component as singleton scoped
-            // TODO bind component with qualifiers as singleton scoped
+            @Test
+            void should_bind_component_as_singleton_scoped() {
+                contextConfig.bind(NoSingleton.class, NoSingleton.class, new SingletonLiteral());
+                Context context = contextConfig.getContext();
+                assertSame(context.get(ComponentRef.of(NoSingleton.class)).get(),
+                        context.get(ComponentRef.of(NoSingleton.class)).get());
+            }
+
             // TODO get scope from component class
             // TODO get scope from component class with qualifier
             // TODO bind component with customize scope annotation
@@ -222,6 +229,14 @@ public class ContextTest {
                     contextConfig.bind(NoSingleton.class, NoSingleton.class, new SkywalkerLiteral());
                     Context context = contextConfig.getContext();
                     assertNotSame(context.get(ComponentRef.of(NoSingleton.class, new SkywalkerLiteral())).get(),
+                            context.get(ComponentRef.of(NoSingleton.class, new SkywalkerLiteral())).get());
+                }
+
+                @Test
+                void should_bind_component_as_singleton_scoped() {
+                    contextConfig.bind(NoSingleton.class, NoSingleton.class, new SingletonLiteral(), new SkywalkerLiteral());
+                    Context context = contextConfig.getContext();
+                    assertSame(context.get(ComponentRef.of(NoSingleton.class, new SkywalkerLiteral())).get(),
                             context.get(ComponentRef.of(NoSingleton.class, new SkywalkerLiteral())).get());
                 }
             } 
@@ -597,5 +612,13 @@ record TestLiteral() implements Test {
     @Override
     public Class<? extends Annotation> annotationType() {
         return Test.class;
+    }
+}
+
+record SingletonLiteral() implements Singleton {
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return Singleton.class;
     }
 }

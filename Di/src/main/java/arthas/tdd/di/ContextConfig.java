@@ -2,10 +2,12 @@ package arthas.tdd.di;
 
 import jakarta.inject.Provider;
 import jakarta.inject.Qualifier;
+import jakarta.inject.Scope;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
@@ -32,14 +34,45 @@ public class ContextConfig {
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation,
-            Annotation... qualifiers) {
-        if (Arrays.stream(qualifiers)
-                .anyMatch(qualifier -> !qualifier.annotationType().isAnnotationPresent(Qualifier.class))) {
+            Annotation... annotations) {
+        if (Arrays.stream(annotations)
+                .map(Annotation::annotationType)
+                .anyMatch(t -> !t.isAnnotationPresent(Qualifier.class) && !t.isAnnotationPresent(Scope.class))) {
             throw new IllegalComponentException();
         }
-        Arrays.stream(qualifiers)
-                .forEach(qualifier -> components.put(new Component(type, qualifier),
-                        new InjectionProvider<>(implementation)));
+        List<Annotation> qualifiers = Arrays.stream(annotations)
+                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
+                .toList();
+
+        Optional<Annotation> scope = Arrays.stream(annotations)
+                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class)).findFirst();
+
+        ComponentProvider<Implementation> injectionProvider = new InjectionProvider<>(implementation);
+        ComponentProvider<Implementation> provider = scope.map(
+                        s -> (ComponentProvider<Implementation>) new SingletonInjectionProvider<>(injectionProvider))
+                .orElse(injectionProvider);
+        if (qualifiers.isEmpty()) {
+            components.put(new Component(type, null), provider);
+        }
+        qualifiers.forEach(
+                qualifier -> components.put(new Component(type, qualifier), provider));
+    }
+
+    static class SingletonInjectionProvider<T> implements ComponentProvider<T> {
+        private T singleton;
+        private ComponentProvider<T> provider;
+
+        public SingletonInjectionProvider(ComponentProvider<T> provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public T get(Context context) {
+            if (singleton == null) {
+                singleton = provider.get(context);
+            }
+            return singleton;
+        }
     }
 
     public Context getContext() {
