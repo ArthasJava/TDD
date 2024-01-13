@@ -12,11 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
-import java.util.function.Function;
 
 public class ContextConfig {
     private final Map<Component, ComponentProvider<?>> components = new HashMap<>();
-    private final Map<Class<?>, Function<ComponentProvider<?>, ComponentProvider<?>>> scopes = new HashMap<>();
+    private final Map<Class<?>, ScopeProvider> scopes = new HashMap<>();
 
     public ContextConfig() {
         scopes.put(Singleton.class, SingletonInjectionProvider::new);
@@ -70,11 +69,10 @@ public class ContextConfig {
     }
 
     private ComponentProvider<?> getProvider(Annotation scope, ComponentProvider<?> injectionProvider) {
-        return scopes.get(scope.annotationType()).apply(injectionProvider);
+        return scopes.get(scope.annotationType()).create(injectionProvider);
     }
 
-    public <ScopeType extends Annotation> void scope(Class<ScopeType> scope,
-            Function<ComponentProvider<?>, ComponentProvider<?>> provider) {
+    public <ScopeType extends Annotation> void scope(Class<ScopeType> scope, ScopeProvider provider) {
         scopes.put(scope, provider);
     }
 
