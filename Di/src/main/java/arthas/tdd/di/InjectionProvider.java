@@ -26,11 +26,10 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Stream.concat;
 
 class InjectionProvider<T> implements ComponentProvider<T> {
-    private final Constructor<T> injectConstructor;
     private final List<Field> injectFields;
     private final List<Method> injectMethods;
     private final List<ComponentRef> dependencies;
-    private Injectable<Constructor<T>> injectableConstructors;
+    private Injectable<Constructor<T>> injectConstructors;
 
     public InjectionProvider(Class<T> component) {
         if (Modifier.isAbstract(component.getModifiers())) {
@@ -39,9 +38,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         Constructor<T> constructor = getInjectConstructor(component);
         ComponentRef<?>[] required = stream(constructor.getParameters()).map(InjectionProvider::toComponentRef)
                 .toArray(ComponentRef<?>[]::new);
-        this.injectableConstructors = new Injectable<>(constructor, required);
-        this.injectConstructor = constructor;
-
+        this.injectConstructors = new Injectable<>(constructor, required);
 
         this.injectFields = getInjectFields(component);
         this.injectMethods = getInjectMethods(component);
@@ -57,7 +54,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     @Override
     public T get(Context context) {
         try {
-            T instance = injectableConstructors.element.newInstance(injectableConstructors.toDependencies(context));
+            T instance = injectConstructors.element.newInstance(injectConstructors.toDependencies(context));
             for (Field field : injectFields) {
                 field.set(instance, toDependency(context, field));
             }
@@ -78,7 +75,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     @Override
     public List<ComponentRef> getDependencies() {
-        return concat(concat(stream(this.injectableConstructors.required),
+        return concat(concat(stream(this.injectConstructors.required),
                 injectFields.stream().map(f -> toComponentRef(f))), injectMethods.stream()
                 .flatMap(m -> stream(m.getParameters()))
                 .map(InjectionProvider::toComponentRef)).collect(Collectors.toList());
