@@ -30,6 +30,11 @@ public class ComponentRef<ComponentType> {
         init(type, qualifier);
     }
 
+    protected ComponentRef(Annotation annotation) {
+        Type type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        init(type, annotation);
+    }
+
     protected ComponentRef() {
         Type type = ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         init(type, null);

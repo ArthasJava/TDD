@@ -131,9 +131,25 @@ public class ContextTest {
 
         @Nested
         public class WithQualifier {
+
+            private TestComponent instance;
+
+            @BeforeEach
+            void setUp() {
+                instance = new TestComponent() { };
+            }
+
+            @Test
+            void should_retrieve_bind_type_as_provider() {
+                contextConfig.bind(TestComponent.class, instance, new SkywalkerLiteral());
+
+                Optional<Provider<TestComponent>> provider = contextConfig.getContext()
+                        .get(new ComponentRef<>(new SkywalkerLiteral()) { });
+                assertTrue(provider.isPresent());
+            }
+
             @Test
             void should_bind_instance_with_multi_qualifiers() {
-                TestComponent instance = new TestComponent() { };
                 contextConfig.bind(TestComponent.class, instance, new NamedLiteral("chooseOne"),
                         new NamedLiteral("skywalker"));
 
@@ -170,7 +186,6 @@ public class ContextTest {
 
             @Test
             void should_throw_exception_if_illegal_qualifier_given_to_instance() {
-                TestComponent instance = new TestComponent() { };
                 assertThrows(IllegalComponentException.class,
                         () -> contextConfig.bind(TestComponent.class, instance, new TestLiteral()));
             }
@@ -395,8 +410,7 @@ public class ContextTest {
                         () -> contextConfig.getContext());
                 assertEquals(new Component(InjectionConstructor.class, new NamedLiteral("Owner")),
                         exception.getComponent());
-                assertEquals(new Component(Dependency.class, new SkywalkerLiteral()),
-                        exception.getDependency());
+                assertEquals(new Component(Dependency.class, new SkywalkerLiteral()), exception.getDependency());
             }
 
             static class InjectionConstructor {
