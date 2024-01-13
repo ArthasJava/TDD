@@ -399,18 +399,28 @@ public class ContextTest {
 
         @Nested
         public class WithQualifier {
-            // TODO dependency missing if qualifier not match
 
-            @Test
-            void should_throw_exception_if_dependency_with_qualifier_not_found() {
+            @ParameterizedTest
+            @MethodSource
+            void should_throw_exception_if_dependency_with_qualifier_not_found(
+                    Class<? extends TestComponent> component) {
                 contextConfig.bind(Dependency.class, new Dependency() { });
-                contextConfig.bind(InjectionConstructor.class, InjectionConstructor.class, new NamedLiteral("Owner"));
+                contextConfig.bind(TestComponent.class, component, new NamedLiteral("Owner"));
 
                 DependencyNotFoundException exception = assertThrows(DependencyNotFoundException.class,
                         () -> contextConfig.getContext());
-                assertEquals(new Component(InjectionConstructor.class, new NamedLiteral("Owner")),
-                        exception.getComponent());
+                assertEquals(new Component(TestComponent.class, new NamedLiteral("Owner")), exception.getComponent());
                 assertEquals(new Component(Dependency.class, new SkywalkerLiteral()), exception.getDependency());
+            }
+
+            static Stream<Arguments> should_throw_exception_if_dependency_with_qualifier_not_found() {
+                return Stream.of(Named.of("Inject Constructor with Qualifier", InjectionConstructor.class),
+                                Named.of("Inject Field with Qualifier", InjectionField.class),
+                                Named.of("Inject Method with Qualifier", InjectionMethod.class),
+                                Named.of("Provider In Inject Constructor with Qualifier", InjectionConstructorProvider.class),
+                                Named.of("Provider In Inject Field with Qualifier", InjectionFieldProvider.class),
+                                Named.of("Provider In Inject Method with Qualifier", InjectionMethodProvider.class))
+                        .map(Arguments::of);
             }
 
             static class InjectionConstructor {
@@ -419,27 +429,95 @@ public class ContextTest {
                 }
             }
 
-            static class SkywalkerDependency implements Dependency {
+            static class InjectionField {
                 @Inject
-                public SkywalkerDependency(@jakarta.inject.Named("chooseOne") Dependency dependency) {
+                @Skywalker
+                Dependency dependency;
+            }
+
+            static class InjectionMethod {
+                @Inject
+                void install(@Skywalker Dependency dependency) {
                 }
             }
 
-            static class NoCyclicDependency implements Dependency {
+            static class InjectionConstructorProvider {
                 @Inject
-                public NoCyclicDependency(@Skywalker Dependency dependency) {
+                public InjectionConstructorProvider(@Skywalker Provider<Dependency> dependency) {
                 }
             }
 
-            // TODO check cyclic dependencies with qualifier
+            static class InjectionFieldProvider {
+                @Inject
+                @Skywalker
+                Provider<Dependency> dependency;
+            }
 
-            @Test
-            void should_not_throw_cyclic_exception_if_dependency_with_same_type_but_tagged_with_different_qualifier() {
+            static class InjectionMethodProvider {
+                @Inject
+                public void install(@Skywalker Provider<Dependency> dependency) {
+                }
+            }
+
+            @ParameterizedTest(name = "{1} ➡️ @Skywalker({0}) ➡️ @Name(\"choose\") not cyclic dependencies")
+            @MethodSource
+            void should_not_throw_cyclic_exception_if_dependency_with_same_type_but_tagged_with_different_qualifier(
+                    Class<? extends Dependency> skywalker, Class<? extends Dependency> noCyclic) {
                 contextConfig.bind(Dependency.class, new Dependency() { }, new NamedLiteral("chooseOne"));
-                contextConfig.bind(Dependency.class, SkywalkerDependency.class, new SkywalkerLiteral());
-                contextConfig.bind(Dependency.class, NoCyclicDependency.class);
+                contextConfig.bind(Dependency.class, skywalker, new SkywalkerLiteral());
+                contextConfig.bind(Dependency.class, noCyclic);
 
                 assertDoesNotThrow(() -> contextConfig.getContext());
+            }
+
+            static Stream<Arguments> should_not_throw_cyclic_exception_if_dependency_with_same_type_but_tagged_with_different_qualifier() {
+                List<Arguments> arguments = new ArrayList<>();
+                for (Named skywalker : List.of(Named.of("Inject Constructor", SkywalkerInjectConstructor.class),
+                        Named.of("Inject Field", SkywalkerInjectField.class),
+                        Named.of("Inject Method", SkywalkerInjectMethod.class))) {
+                    for (Named noCyclic : List.of(Named.of("Inject Constructor", NoCyclicInjectConstructor.class),
+                            Named.of("Inject Field", NoCyclicInjectField.class),
+                            Named.of("Inject Method", NoCyclicInjectMethod.class))) {
+                        arguments.add(Arguments.of(skywalker, noCyclic));
+                    }
+                }
+                return arguments.stream();
+            }
+
+            static class SkywalkerInjectConstructor implements Dependency {
+                @Inject
+                public SkywalkerInjectConstructor(@jakarta.inject.Named("chooseOne") Dependency dependency) {
+                }
+            }
+
+            static class SkywalkerInjectField implements Dependency {
+                @Inject
+                @jakarta.inject.Named("chooseOne")
+                Dependency dependency;
+            }
+
+            static class SkywalkerInjectMethod implements Dependency {
+                @Inject
+                public void install(@jakarta.inject.Named("chooseOne") Dependency dependency) {
+                }
+            }
+
+            static class NoCyclicInjectConstructor implements Dependency {
+                @Inject
+                public NoCyclicInjectConstructor(@Skywalker Dependency dependency) {
+                }
+            }
+
+            static class NoCyclicInjectField implements Dependency {
+                @Inject
+                @Skywalker
+                Dependency dependency;
+            }
+
+            static class NoCyclicInjectMethod implements Dependency {
+                @Inject
+                public void install(@Skywalker Dependency dependency) {
+                }
             }
         }
     }
