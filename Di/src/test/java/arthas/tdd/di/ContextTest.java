@@ -220,19 +220,18 @@ public class ContextTest {
 
             // TODO get scope from component class
             @Singleton
-            static class SingletonAnnotated {
-            }
+            static class SingletonAnnotated implements Dependency { }
 
             @Test
             void should_retrieve_scope_annotation_from_component() {
-                contextConfig.bind(SingletonAnnotated.class, SingletonAnnotated.class);
+                contextConfig.bind(Dependency.class, SingletonAnnotated.class);
                 Context context = contextConfig.getContext();
-                assertSame(context.get(ComponentRef.of(SingletonAnnotated.class)).get(),
-                        context.get(ComponentRef.of(SingletonAnnotated.class)).get());
+                assertSame(context.get(ComponentRef.of(Dependency.class)).get(),
+                        context.get(ComponentRef.of(Dependency.class)).get());
             }
 
             // TODO bind component with customize scope annotation
-            
+
             @Nested
             public class WithQualifier {
                 @Test
@@ -245,7 +244,8 @@ public class ContextTest {
 
                 @Test
                 void should_bind_component_as_singleton_scoped() {
-                    contextConfig.bind(NoSingleton.class, NoSingleton.class, new SingletonLiteral(), new SkywalkerLiteral());
+                    contextConfig.bind(NoSingleton.class, NoSingleton.class, new SingletonLiteral(),
+                            new SkywalkerLiteral());
                     Context context = contextConfig.getContext();
                     assertSame(context.get(ComponentRef.of(NoSingleton.class, new SkywalkerLiteral())).get(),
                             context.get(ComponentRef.of(NoSingleton.class, new SkywalkerLiteral())).get());
@@ -253,12 +253,12 @@ public class ContextTest {
 
                 @Test
                 void should_retrieve_scope_annotation_from_component() {
-                    contextConfig.bind(SingletonAnnotated.class, SingletonAnnotated.class, new SkywalkerLiteral());
+                    contextConfig.bind(Dependency.class, SingletonAnnotated.class, new SkywalkerLiteral());
                     Context context = contextConfig.getContext();
-                    assertSame(context.get(ComponentRef.of(SingletonAnnotated.class, new SkywalkerLiteral())).get(),
-                            context.get(ComponentRef.of(SingletonAnnotated.class, new SkywalkerLiteral())).get());
+                    assertSame(context.get(ComponentRef.of(Dependency.class, new SkywalkerLiteral())).get(),
+                            context.get(ComponentRef.of(Dependency.class, new SkywalkerLiteral())).get());
                 }
-            } 
+            }
         }
     }
 

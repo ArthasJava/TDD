@@ -30,7 +30,7 @@ public class ContextConfig {
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation) {
-        bind(type, implementation, type.getAnnotations());
+        bind(type, implementation, new Annotation[0]);
     }
 
     public <Type, Implementation extends Type> void bind(Class<Type> type, Class<Implementation> implementation,
@@ -44,7 +44,7 @@ public class ContextConfig {
                 .filter(annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
                 .toList();
 
-        Optional<Annotation> scopeFromType = Arrays.stream(type.getAnnotations())
+        Optional<Annotation> scopeFromType = Arrays.stream(implementation.getAnnotations())
                 .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class))
                 .findFirst();
 
