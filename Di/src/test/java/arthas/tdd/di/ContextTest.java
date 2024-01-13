@@ -283,10 +283,22 @@ public class ContextTest {
                     Arguments.of(Named.of("Method Injection", TypeBinding.MethodInjection.class)), Arguments.of(
                             Named.of("Provider In Injection Constructor", MissDependencyProviderConstructor.class)),
                     Arguments.of(Named.of("Provider In Injection Field", MissDependencyProviderField.class)),
-                    Arguments.of(Named.of("Provider In Injection Method", MissDependencyProviderMethod.class)));
+                    Arguments.of(Named.of("Provider In Injection Method", MissDependencyProviderMethod.class)),
+                    Arguments.of(Named.of("Scope", MissDependencyScoped.class)),
+                    Arguments.of(Named.of("Provider Scope", MissDependencyProviderScoped.class)));
         }
 
-        // TODO missing dependencies with scope
+        @Singleton
+        static class MissDependencyScoped implements Dependency {
+            @Inject
+            Dependency dependency;
+        }
+
+        @Singleton
+        static class MissDependencyProviderScoped implements Dependency {
+            @Inject
+            Provider<Dependency> dependency;
+        }
 
         static class MissDependencyProviderConstructor {
             @Inject
