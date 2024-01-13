@@ -35,12 +35,12 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         if (Modifier.isAbstract(component.getModifiers())) {
             throw new IllegalComponentException();
         }
-        this.injectConstructors = getInjectable(getInjectConstructor(component));
+        this.injectConstructors = Injectable.of(getInjectConstructor(component));
         this.injectFields = getInjectFields(component).stream()
-                .map(InjectionProvider::getInjectable)
+                .map(Injectable::of)
                 .toList();
         this.injectMethods = getInjectMethods(component).stream()
-                .map(InjectionProvider::getInjectable)
+                .map(Injectable::of)
                 .toList();
 
         if (injectFields.stream()
@@ -54,15 +54,6 @@ class InjectionProvider<T> implements ComponentProvider<T> {
             throw new IllegalComponentException();
         }
         this.dependencies = getDependencies();
-    }
-
-    private static Injectable<Field> getInjectable(Field field) {
-        return new Injectable<>(field, new ComponentRef[]{toComponentRef(field)});
-    }
-
-    private static <Element extends Executable> Injectable<Element> getInjectable(Element element) {
-        return new Injectable<>(element,
-                stream(element.getParameters()).map(InjectionProvider::toComponentRef).toArray(ComponentRef<?>[]::new));
     }
 
     @Override
@@ -82,6 +73,15 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     static record Injectable<Element extends AccessibleObject>(Element element, ComponentRef<?>[] required) {
+        public static <Element extends Executable> Injectable<Element> of(Element element) {
+            return new Injectable<>(element,
+                    stream(element.getParameters()).map(InjectionProvider::toComponentRef).toArray(ComponentRef<?>[]::new));
+        }
+
+        public static Injectable<Field> of(Field field) {
+            return new Injectable<>(field, new ComponentRef[]{toComponentRef(field)});
+        }
+
         Object[] toDependencies(Context context) {
             return stream(required).map(context::get).map(Optional::get).toArray();
         }
