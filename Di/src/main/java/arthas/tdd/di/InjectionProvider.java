@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.stream;
@@ -38,9 +37,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         this.injectFields = getInjectFields(component);
         this.injectMethods = getInjectMethods(component);
 
-        if (injectFields.stream()
-                .map(Injectable::element)
-                .anyMatch(field -> Modifier.isFinal(field.getModifiers()))) {
+        if (injectFields.stream().map(Injectable::element).anyMatch(field -> Modifier.isFinal(field.getModifiers()))) {
             throw new IllegalComponentException();
         }
         if (injectMethods.stream()
@@ -72,6 +69,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
             return new Injectable<>(element,
                     stream(element.getParameters()).map(Injectable::toComponentRef).toArray(ComponentRef<?>[]::new));
         }
+
         public static Injectable<Field> of(Field field) {
             return new Injectable<>(field, new ComponentRef[]{toComponentRef(field)});
         }
@@ -92,8 +90,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
         private static Annotation getQualifier(AnnotatedElement element) {
             List<Annotation> qualifiers = stream(element.getAnnotations()).filter(
-                            annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
-                    .toList();
+                    annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class)).toList();
             if (qualifiers.size() > 1) {
                 throw new IllegalComponentException();
             }
@@ -101,14 +98,12 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         }
 
     }
-    @Override
-    public List<ComponentRef> getDependencies() {
-        return concat(concat(stream(this.injectConstructors.required),
-                        injectFields.stream().flatMap(fieldInjectable -> stream(fieldInjectable.required))),
-                injectMethods.stream().flatMap(methodInjectable -> stream(methodInjectable.required))).collect(
-                Collectors.toList());
-    }
 
+    @Override
+    public List<ComponentRef<?>> getDependencies() {
+        return concat(concat(Stream.of(injectConstructors), injectFields.stream()), injectMethods.stream()).flatMap(
+                injectable -> stream(injectable.required)).toList();
+    }
 
     private static <T> Injectable<Constructor<T>> getInjectConstructor(Class<T> component) {
         List<Constructor<?>> injectConstructors = injectable(component.getConstructors()).toList();
