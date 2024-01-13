@@ -78,28 +78,6 @@ public class ContextConfig {
         scopes.put(scope, provider);
     }
 
-    static class SingletonInjectionProvider<T> implements ComponentProvider<T> {
-        private T singleton;
-        private ComponentProvider<T> provider;
-
-        public SingletonInjectionProvider(ComponentProvider<T> provider) {
-            this.provider = provider;
-        }
-
-        @Override
-        public T get(Context context) {
-            if (singleton == null) {
-                singleton = provider.get(context);
-            }
-            return singleton;
-        }
-
-        @Override
-        public List<ComponentRef<?>> getDependencies() {
-            return provider.getDependencies();
-        }
-    }
-
     public Context getContext() {
         // 后续做校验的为止
         components.keySet().forEach(component -> checkDependencies(component, new Stack<>()));
