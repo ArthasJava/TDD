@@ -244,6 +244,30 @@ public class ContextTest {
                         .size());
             }
 
+            @Test
+            void should_throw_exception_if_multi_scope_provided() {
+                assertThrows(IllegalComponentException.class,
+                        () -> contextConfig.bind(NoSingleton.class, NoSingleton.class, new SingletonLiteral(),
+                                new PooledLiteral()));
+            }
+
+            @Singleton
+            @Pooled
+            static class MultiScopeAnnotated {
+            }
+
+            @Test
+            void should_throw_exception_if_multi_scope_annotated() {
+                assertThrows(IllegalComponentException.class,
+                        () -> contextConfig.bind(MultiScopeAnnotated.class, MultiScopeAnnotated.class));
+            }
+
+            @Test
+            void should_throw_exception_if_scope_undefined() {
+                assertThrows(IllegalComponentException.class,
+                        () -> contextConfig.bind(MultiScopeAnnotated.class, MultiScopeAnnotated.class, new PooledLiteral()));
+            }
+
             @Nested
             public class WithQualifier {
                 @Test

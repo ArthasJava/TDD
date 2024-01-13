@@ -55,6 +55,9 @@ public class ContextConfig {
     }
 
     private <Type> ComponentProvider<?> createScopedProvider(Class<Type> implementation, List<Annotation> scopes) {
+        if (scopes.size() > 1) {
+            throw new IllegalComponentException();
+        }
         ComponentProvider<?> injectionProvider = new InjectionProvider<>(implementation);
         return scopes.stream()
                 .findFirst()
@@ -71,9 +74,12 @@ public class ContextConfig {
     }
 
     private static <Type> Optional<Annotation> scopeFrom(Class<Type> implementation) {
-        return Arrays.stream(implementation.getAnnotations())
-                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class))
-                .findFirst();
+        List<Annotation> scopeAnnotations = Arrays.stream(implementation.getAnnotations())
+                .filter(annotation -> annotation.annotationType().isAnnotationPresent(Scope.class)).toList();
+        if (scopeAnnotations.size() > 1) {
+            throw new IllegalComponentException();
+        }
+        return scopeAnnotations.stream().findFirst();
     }
 
     private Class<?> typeOf(Annotation annotation) {
@@ -87,6 +93,9 @@ public class ContextConfig {
     @interface Illegal { }
 
     private ComponentProvider<?> getProvider(Annotation scope, ComponentProvider<?> injectionProvider) {
+        if (!scopes.containsKey(scope.annotationType())) {
+            throw new IllegalComponentException();
+        }
         return scopes.get(scope.annotationType()).create(injectionProvider);
     }
 
