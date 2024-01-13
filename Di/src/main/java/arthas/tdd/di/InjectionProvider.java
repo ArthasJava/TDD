@@ -26,7 +26,6 @@ import static java.util.Arrays.stream;
 import static java.util.stream.Stream.concat;
 
 class InjectionProvider<T> implements ComponentProvider<T> {
-    private final List<ComponentRef> dependencies;
     private Injectable<Constructor<T>> injectConstructors;
     private List<Injectable<Method>> injectMethods;
     private List<Injectable<Field>> injectFields;
@@ -53,7 +52,6 @@ class InjectionProvider<T> implements ComponentProvider<T> {
                 .anyMatch(method -> method.getTypeParameters().length != 0)) {
             throw new IllegalComponentException();
         }
-        this.dependencies = getDependencies();
     }
 
     @Override
@@ -153,19 +151,6 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     private static boolean isOverride(Method method, Method o) {
         return o.getName().equals(method.getName()) && Arrays.equals(o.getParameterTypes(), method.getParameterTypes());
-    }
-
-    private static <T> Object[] toDependencies(Context context, Executable executable) {
-        return stream(executable.getParameters()).map(parameter -> toDependency(context, toComponentRef(parameter)))
-                .toArray();
-    }
-
-    private static Object toDependency(Context context, Field field) {
-        return toDependency(context, toComponentRef(field));
-    }
-
-    private static Object toDependency(Context context, ComponentRef ref) {
-        return context.get(ref).get();
     }
 
     private static ComponentRef toComponentRef(Field field) {
