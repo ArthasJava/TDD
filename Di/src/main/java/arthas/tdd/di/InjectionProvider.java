@@ -35,10 +35,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         if (Modifier.isAbstract(component.getModifiers())) {
             throw new IllegalComponentException();
         }
-        Constructor<T> constructor = getInjectConstructor(component);
-        ComponentRef<?>[] required = stream(constructor.getParameters()).map(InjectionProvider::toComponentRef)
-                .toArray(ComponentRef<?>[]::new);
-        this.injectConstructors = new Injectable<>(constructor, required);
+        this.injectConstructors = getInjectable(getInjectConstructor(component));
 
         this.injectFields = getInjectFields(component);
         this.injectMethods = getInjectMethods(component);
@@ -49,6 +46,11 @@ class InjectionProvider<T> implements ComponentProvider<T> {
             throw new IllegalComponentException();
         }
         this.dependencies = getDependencies();
+    }
+
+    private static <Element extends Executable> Injectable<Element> getInjectable(Element element) {
+        return new Injectable<>(element, stream(element.getParameters()).map(InjectionProvider::toComponentRef)
+                .toArray(ComponentRef<?>[]::new));
     }
 
     @Override
