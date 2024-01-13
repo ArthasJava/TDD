@@ -30,6 +30,7 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     private final List<Method> injectMethods;
     private final List<ComponentRef> dependencies;
     private Injectable<Constructor<T>> injectConstructors;
+    private List<Injectable<Method>> injectableMethods;
 
     public InjectionProvider(Class<T> component) {
         if (Modifier.isAbstract(component.getModifiers())) {
@@ -38,19 +39,24 @@ class InjectionProvider<T> implements ComponentProvider<T> {
         this.injectConstructors = getInjectable(getInjectConstructor(component));
 
         this.injectFields = getInjectFields(component);
+        this.injectableMethods = getInjectMethods(component).stream()
+                .map(InjectionProvider::getInjectable)
+                .collect(Collectors.toList());
         this.injectMethods = getInjectMethods(component);
         if (injectFields.stream().anyMatch(field -> Modifier.isFinal(field.getModifiers()))) {
             throw new IllegalComponentException();
         }
-        if (injectMethods.stream().anyMatch(method -> method.getTypeParameters().length != 0)) {
+        if (injectableMethods.stream()
+                .map(Injectable::element)
+                .anyMatch(method -> method.getTypeParameters().length != 0)) {
             throw new IllegalComponentException();
         }
         this.dependencies = getDependencies();
     }
 
     private static <Element extends Executable> Injectable<Element> getInjectable(Element element) {
-        return new Injectable<>(element, stream(element.getParameters()).map(InjectionProvider::toComponentRef)
-                .toArray(ComponentRef<?>[]::new));
+        return new Injectable<>(element,
+                stream(element.getParameters()).map(InjectionProvider::toComponentRef).toArray(ComponentRef<?>[]::new));
     }
 
     @Override
@@ -60,8 +66,8 @@ class InjectionProvider<T> implements ComponentProvider<T> {
             for (Field field : injectFields) {
                 field.set(instance, toDependency(context, field));
             }
-            for (Method method : injectMethods) {
-                method.invoke(instance, toDependencies(context, method));
+            for (Injectable<Method> injectableMethod : injectableMethods) {
+                injectableMethod.element.invoke(instance, injectableMethod.toDependencies(context));
             }
             return instance;
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
@@ -77,15 +83,16 @@ class InjectionProvider<T> implements ComponentProvider<T> {
 
     @Override
     public List<ComponentRef> getDependencies() {
-        return concat(concat(stream(this.injectConstructors.required),
-                injectFields.stream().map(f -> toComponentRef(f))), injectMethods.stream()
-                .flatMap(m -> stream(m.getParameters()))
-                .map(InjectionProvider::toComponentRef)).collect(Collectors.toList());
+        return concat(
+                concat(stream(this.injectConstructors.required), injectFields.stream().map(f -> toComponentRef(f))),
+                injectableMethods.stream().flatMap(methodInjectable -> stream(methodInjectable.required))).collect(
+                Collectors.toList());
     }
 
     private static Annotation getQualifier(AnnotatedElement element) {
         List<Annotation> qualifiers = stream(element.getAnnotations()).filter(
-                annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class)).collect(Collectors.toList());
+                        annotation -> annotation.annotationType().isAnnotationPresent(Qualifier.class))
+                .collect(Collectors.toList());
         if (qualifiers.size() > 1) {
             throw new IllegalComponentException();
         }
@@ -143,8 +150,8 @@ class InjectionProvider<T> implements ComponentProvider<T> {
     }
 
     private static <T> Object[] toDependencies(Context context, Executable executable) {
-        return stream(executable.getParameters()).map(
-                parameter -> toDependency(context, toComponentRef(parameter))).toArray();
+        return stream(executable.getParameters()).map(parameter -> toDependency(context, toComponentRef(parameter)))
+                .toArray();
     }
 
     private static Object toDependency(Context context, Field field) {
